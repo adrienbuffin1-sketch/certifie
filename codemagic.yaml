@@ -1,0 +1,67 @@
+# Codemagic builds the iPhone app in the cloud (no Mac needed) and sends it to TestFlight.
+# Uses the same App Store Connect API key as Lumen Deep and Mandala Pop ("LumenDeepKey").
+workflows:
+  ios-testflight:
+    name: Certifié - iOS TestFlight
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: LumenDeepKey
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.certifie.app
+      vars:
+        # App Store Connect > Certifié > App Information > Apple ID (fill in after creating the app)
+        APP_STORE_APPLE_ID: 0
+      node: 20
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+    scripts:
+      - name: Install packages
+        script: npm install
+      - name: Add the iOS project
+        script: npx cap add ios
+      - name: App icon and splash screen
+        script: npx @capacitor/assets generate --ios --iconBackgroundColor '#16204a' --splashBackgroundColor '#16204a' --splashBackgroundColorDark '#16204a'
+      - name: Copy the app in
+        script: npx cap sync ios
+      - name: iPhone only, portrait, name, no export compliance questions
+        script: |
+          PL=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$PL"
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$PL"
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Certifié" "$PL" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Certifié" "$PL"
+          /usr/libexec/PlistBuddy -c "Add :UIStatusBarHidden bool false" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Add :UIViewControllerBasedStatusBarAppearance bool true" "$PL" || true
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/App/App.xcodeproj/project.pbxproj
+          if [ -f ios/App/Podfile ]; then
+            sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
+            cd ios/App && pod install --repo-update && cd ../..
+          fi
+      - name: Signing
+        script: xcode-project use-profiles
+      - name: Build number
+        script: |
+          cd ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          agvtool new-version -all $((LATEST + 1))
+          agvtool new-marketing-version 1.0.0
+      - name: Build the app
+        script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

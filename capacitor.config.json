@@ -1,0 +1,12 @@
+{
+  "appId": "com.certifie.app",
+  "appName": "Certifié",
+  "webDir": "www",
+  "ios": { "contentInset": "never", "backgroundColor": "#16204a", "scrollEnabled": false, "limitsNavigationsToAppBoundDomains": false },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1500, "launchAutoHide": false, "backgroundColor": "#16204a", "showSpinner": false },
+    "StatusBar": { "style": "DARK", "overlaysWebView": true },
+    "LocalNotifications": { "iconColor": "#2340c8" },
+    "Keyboard": { "resize": "native" }
+  }
+}

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16204a">
+<meta name="format-detection" content="telephone=no">
+<title>Certifié</title>
+<style>
+/* Certifié — French → English translator test prep.
+   Idea: a translator's stamp on dictionary paper. Ink navy band, stamp blue, warm gold for streaks.
+   Type: Newsreader (headwords, numbers) + Instrument Sans. Bundled, works offline. */
+@font-face{font-family:"News";src:url(fonts/newsreader.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
+@font-face{font-family:"News";src:url(fonts/newsreader-italic.woff2) format("woff2");font-weight:200 800;font-style:italic;font-display:swap}
+@font-face{font-family:"Inst";src:url(fonts/instrument-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Inst";src:url(fonts/instrument-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Inst";src:url(fonts/instrument-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Inst";src:url(fonts/instrument-700.woff2) format("woff2");font-weight:700;font-display:swap}
+
+:root{
+  --bg:#f3f0e8;--paper:#fbfaf6;--card:#ffffff;--ink:#181a26;--mute:#626574;--line:#e3ddd0;--soft:#ece7db;--soft2:#e4ecff;
+  --blue:#2340c8;--blue-ink:#ffffff;--navy:#16204a;--navy2:#1f2c63;--gold:#d8962a;--gold-soft:#f2dcb0;
+  --green:#1d7a52;--green-soft:#dcefe5;--red:#bf3526;--red-soft:#f8e0dc;--amber-soft:#fbecc8;
+  --known:#7f95ea;--learn:#c8d2f6;--shadow:0 1px 2px rgba(24,26,38,.06),0 6px 18px -8px rgba(24,26,38,.14);
+  color-scheme:light;
+}
+:root.dark{
+  --bg:#0d1020;--paper:#121629;--card:#161b31;--ink:#eceef6;--mute:#9da3b9;--line:#262c47;--soft:#1e2440;--soft2:#1f2a52;
+  --blue:#8ea4ff;--blue-ink:#0d1020;--navy:#0a0e22;--navy2:#141b3c;--gold:#f0b34c;--gold-soft:#4a3a1c;
+  --green:#4fcf98;--green-soft:#163a2c;--red:#ff8a7a;--red-soft:#43211e;--amber-soft:#3d3218;
+  --known:#5d74d6;--learn:#2c3766;--shadow:0 1px 0 rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inst,-apple-system,system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+h1,h2,h3,.hw,.serif{font-family:News,Georgia,serif;letter-spacing:-.015em;line-height:1.1;margin:0;font-weight:600}
+button{font-family:inherit}
+a{color:var(--blue)}
+
+/* header */
+header{background:var(--navy);color:#fff;padding:12px 16px 12px;padding-top:max(12px,env(safe-area-inset-top));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));position:relative;z-index:3}
+header .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;flex:1}
+.brand svg{width:32px;height:32px;flex:none}
+.brand h1{font-size:23px;font-weight:600;letter-spacing:-.01em}
+.brand small{display:block;font:500 12px/1.2 Inst,sans-serif;opacity:.7;letter-spacing:.02em}
+#hdr{font:600 12px Inst,sans-serif;background:rgba(255,255,255,.12);border-radius:999px;padding:6px 11px;white-space:nowrap}
+.iconbtn{background:rgba(255,255,255,.1);border:0;color:#fff;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer}
+.iconbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 32px;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));overscroll-behavior:contain}
+.view{max-width:760px;margin:0 auto;display:none}
+.view.on{display:block;animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* tab bar */
+nav{background:var(--paper);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);position:relative;z-index:3}
+nav .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+nav button{background:none;border:0;color:var(--mute);font:600 11.5px Inst,sans-serif;letter-spacing:.01em;padding:8px 2px 9px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7}
+nav button[aria-current=true]{color:var(--blue)}
+nav button[aria-current=true] svg{stroke-width:2.1}
+nav button .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font:700 10.5px/17px Inst,sans-serif}
+
+/* type */
+h2{font-size:clamp(28px,7vw,36px);margin-bottom:4px}
+h3{font-size:19px;margin:26px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+h3 small{font:500 13px Inst,sans-serif;color:var(--mute);letter-spacing:0}
+.sub{color:var(--mute);margin:0 0 16px;font-size:15px}
+.small{font-size:13px;color:var(--mute)}
+.eyebrow{font:700 11px Inst,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+
+/* hero */
+.hero{background:var(--navy);color:#fff;border:0;padding:18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center;position:relative;overflow:hidden;box-shadow:0 14px 30px -18px rgba(10,14,40,.7)}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0%,rgba(91,121,255,.35),transparent 60%),repeating-linear-gradient(0deg,transparent 0 23px,rgba(255,255,255,.035) 23px 24px);pointer-events:none}
+.hero>*{position:relative}
+@media(max-width:400px){.hero{grid-template-columns:118px minmax(0,1fr);gap:14px;padding:16px}}
+.stamp{width:100%;aspect-ratio:1;display:block}
+.stamp text{font-family:News,serif;fill:#fff}
+.lvsub{font-size:13px;opacity:.75}
+.lvname{font:600 clamp(24px,6.4vw,30px)/1.05 News,serif;margin-top:2px}
+.xp{height:8px;border-radius:9px;background:rgba(255,255,255,.16);overflow:hidden;margin:11px 0 6px}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,#f6c66b,var(--gold));border-radius:9px}
+.ladder{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:10px}
+.ladder span{height:5px;border-radius:4px;background:rgba(255,255,255,.16)}
+.ladder span.on{background:#fff}
+.go{margin-top:14px;width:100%;background:#fff;color:var(--navy);border:0;border-radius:13px;font:700 16px Inst,sans-serif;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.go svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2}
+.count{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:6px}
+@media(max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 13px;box-shadow:var(--shadow)}
+.kpi b{display:block;font:600 28px/1 News,serif;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--mute)}
+.kpi.gold b{color:var(--gold)}
+
+.task{display:flex;gap:12px;align-items:center;padding:12px 2px;border-top:1px solid var(--line);cursor:pointer}
+.task:first-child{border-top:0;padding-top:4px}
+.task:last-child{padding-bottom:4px}
+.task input{appearance:none;-webkit-appearance:none;width:26px;height:26px;margin:0;border:2px solid var(--line);border-radius:8px;flex:none;display:grid;place-items:center;background:var(--paper);cursor:pointer}
+.task input:checked{background:var(--green);border-color:var(--green)}
+.task input:checked::after{content:"";width:7px;height:12px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translate(0,-1px) rotate(45deg)}
+.task b{display:block;font-weight:600;font-size:15.5px}
+.task small{color:var(--mute);font-size:13.5px}
+.task .meter{margin-left:auto;font:600 13px Inst,sans-serif;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.deck{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 2.8em;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px;cursor:pointer}
+.deck:first-child{border-top:0;padding-top:2px}
+.deck em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--mute);font-size:13.5px}
+@media(max-width:430px){.deck{grid-template-columns:minmax(0,1fr) 2.8em;gap:6px 10px}.deck .sb{grid-column:1/-1;grid-row:2}}
+.sb{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--soft)}
+.sb i{display:block;height:100%}
+.c-m{background:var(--green)}.c-k{background:var(--known)}.c-l{background:var(--learn)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--mute);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+
+.act{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;align-items:end;height:104px}
+.act div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:5px}
+.act i{width:100%;border-radius:5px 5px 2px 2px;background:var(--blue);min-height:3px}
+.act i.z{background:var(--soft)}
+.act div.t i{background:var(--gold)}
+.act small{font-size:10.5px;color:var(--mute)}
+.ribbon{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.ribbon i{aspect-ratio:1;border-radius:7px;background:var(--soft)}
+.ribbon i.d{background:var(--gold)}
+.ribbon i.p{background:var(--gold-soft)}
+.ribbon i.t{box-shadow:inset 0 0 0 2px var(--ink)}
+
+/* controls */
+.btn{font:600 15px Inst,sans-serif;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:11px 16px;min-height:46px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn.p{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+.btn.g{background:var(--green);border-color:var(--green);color:#fff}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45}
+.btn:active,.chip:active,.opt:active,.go:active,.iconbtn:active{transform:scale(.97)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+select,input[type=date],input[type=time]{font:16px Inst,sans-serif;padding:9px 10px;border-radius:11px;border:1px solid var(--line);background:var(--paper);color:var(--ink);min-height:44px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin:0 -16px 10px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 14px Inst,sans-serif;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:40px;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip .n{opacity:.6;font-weight:500;margin-left:4px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--soft);border-radius:13px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{border:0;background:transparent;color:var(--mute);font:600 14px Inst,sans-serif;border-radius:10px;min-height:38px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+
+/* flashcard */
+.stat{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--mute);margin-bottom:6px}
+.stat b{color:var(--ink);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:9px;background:var(--soft);overflow:hidden;margin:4px 0 14px}
+.bar i{display:block;height:100%;background:var(--green)}
+.flash{min-height:250px;border-radius:24px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:42px 18px 26px;position:relative;box-shadow:0 10px 0 -4px var(--paper),0 10px 0 -3px var(--line),0 20px 0 -9px var(--paper),0 20px 0 -8px var(--line),var(--shadow)}
+.flash .hw{font-size:clamp(30px,8vw,40px);font-weight:600}
+.flash .tag{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;font:600 12px Inst,sans-serif;color:var(--mute);letter-spacing:.02em}
+.flash .tag .new{color:var(--blue)}
+.flash .en{font:600 23px/1.25 Inst,sans-serif;color:var(--blue);margin-top:18px;padding-top:16px;border-top:2px dashed var(--line);width:100%;max-width:440px}
+.flash .note{color:var(--mute);font-size:15px;margin-top:10px;max-width:44ch}
+.flash .inline{width:100%;max-width:440px;margin-top:24px;font:600 21px Inst,sans-serif;text-align:center;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:15px;padding:13px 12px;min-height:58px}
+.flash .inline:focus{border-color:var(--blue);outline:0}
+.flash.ok{border-color:var(--green)}.flash.bad{border-color:var(--red)}
+.verdict{margin-top:18px;font:700 15px Inst,sans-serif;letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px}
+.verdict.ok{color:var(--green);background:var(--green-soft)}.verdict.bad{color:var(--red);background:var(--red-soft)}
+.yours{font-size:15px;margin-top:8px;color:var(--mute)}
+.ans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{text-align:left;font:500 16px/1.35 Inst,sans-serif;padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:50px}
+.opt.ok{border-color:var(--green);background:var(--green-soft)}
+.opt.bad{border-color:var(--red);background:var(--red-soft)}
+.retype{margin-top:14px;padding:14px;border-radius:18px;background:var(--red-soft);border:1px solid var(--line);text-align:center;position:relative}
+.retype.done{background:var(--green-soft)}
+.retype label{display:flex;flex-direction:column;gap:2px;margin-bottom:2px}
+.retype .inline{margin-top:10px;width:100%;font:600 20px Inst,sans-serif;text-align:center;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px;min-height:54px}
+.retype .inline:focus{border-color:var(--blue);outline:0}
+.linkbtn{background:none;border:0;color:var(--mute);font:500 13px Inst,sans-serif;text-decoration:underline;margin-top:8px;cursor:pointer;min-height:32px}
+.shake{animation:shake .35s}@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.empty{text-align:center;padding:28px 18px}
+.empty svg{width:64px;height:64px;margin-bottom:10px}
+
+/* grammar */
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule:first-child{border-top:0;padding-top:2px}
+.rule b{display:block;margin-bottom:5px;font-size:15px}
+.w{color:var(--red);text-decoration:line-through;text-decoration-thickness:1.5px}
+.r{color:var(--green);font-weight:600}
+.search{width:100%;font:16px Inst,sans-serif;padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);margin-bottom:6px}
+
+/* practice */
+.timer{font:600 38px/1 News,serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.timer.low{color:var(--red)}
+.src{font:400 18px/1.62 News,Georgia,serif;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;white-space:pre-line}
+textarea{width:100%;min-height:240px;font:16px/1.6 Inst,sans-serif;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);resize:vertical}
+textarea:focus{border-color:var(--blue);outline:0}
+details{border-top:1px solid var(--line);padding:13px 0 4px;margin-top:12px}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:30px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:400 22px Inst;color:var(--mute)}
+details[open] summary::after{content:"–"}
+ol.err{padding-left:22px;margin:8px 0}
+ol.err li{margin-bottom:7px}
+.pill{display:inline-block;font:700 11px Inst,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--soft2);color:var(--blue)}
+.done-pill{background:var(--green-soft);color:var(--green)}
+.spot{font:400 18px/2 News,Georgia,serif;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;user-select:none;-webkit-user-select:none}
+.spot span.t{cursor:pointer;border-radius:5px;padding:2px 1px;transition:background .15s}
+.spot span.t:active{background:var(--soft)}
+.spot span.f{background:var(--green-soft);color:var(--green);box-shadow:0 2px 0 var(--green)}
+.spot span.m{background:var(--red-soft);color:var(--red);text-decoration:line-through}
+.spot span.rv{background:var(--amber-soft);box-shadow:0 2px 0 var(--gold)}
+.fixes{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.fixes li{font-size:15px;padding:9px 12px;border-radius:11px;background:var(--paper);border:1px solid var(--line)}
+.fixes li.rv{border-color:var(--gold)}
+.score{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;margin:6px 0 10px}
+.score b{font:600 30px/1 News,serif}
+.rub{display:grid;gap:12px;margin-top:10px}
+.rub .q{display:grid;gap:6px}
+.rub .q span{font-weight:600;font-size:15px}
+.rub .q small{color:var(--mute);font-size:13px;font-weight:400}
+.rub .sc{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.rub .sc button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;min-height:40px;font:600 15px Inst;cursor:pointer}
+.rub .sc button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+.cmp{display:grid;gap:10px}
+@media(min-width:700px){.cmp{grid-template-columns:1fr 1fr}}
+.cmp .src{font-size:16px}
+
+/* test */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:10px;margin-bottom:6px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px;box-shadow:var(--shadow)}
+.fact b{display:block;font:600 24px/1.1 News,serif;white-space:nowrap}
+.fact span{font-size:13.5px;color:var(--mute)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-weight:600;color:var(--mute);font-size:13px}
+td:first-child{font-family:News,serif;font-size:16px}
+
+/* sheets */
+.veil{position:fixed;inset:0;background:rgba(8,10,22,.5);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.veil.on{display:flex;animation:fadein .18s}
+@keyframes fadein{from{opacity:0}}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:10px 18px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom));animation:up .25s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.set:first-of-type{border-top:0}
+.set b{display:block;font-weight:600}
+.set small{color:var(--mute);font-size:13px}
+.switch{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:31px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .2s}
+.switch:checked{background:var(--green)}
+.switch:checked::after{transform:translateX(20px)}
+
+/* onboarding */
+#onb{position:fixed;inset:0;z-index:30;background:var(--navy);color:#fff;display:none;flex-direction:column;overflow-y:auto;padding:max(30px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))}
+#onb.on{display:flex}
+#onb .wrap{max-width:440px;margin:auto;width:100%}
+#onb svg.big{width:150px;height:150px;display:block;margin:0 auto 22px}
+#onb h2{font-size:34px;text-align:center}
+#onb p{opacity:.8;text-align:center;margin:10px 0 22px}
+#onb ul{list-style:none;padding:0;margin:0 0 22px;display:grid;gap:12px}
+#onb li{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.07);border-radius:14px;padding:12px 14px;font-size:15px}
+#onb li b{display:block}
+#onb li i{font-style:normal;flex:none;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;font:600 15px News,serif}
+#onb label{display:block;font-size:14px;opacity:.85;margin-bottom:6px}
+#onb input{width:100%;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;color-scheme:dark}
+#onb .go{margin-top:18px}
+#onb .fine{font-size:12px;opacity:.6;text-align:center;margin-top:16px}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);font:600 14px Inst;padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:40;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.burst{position:fixed;inset:0;pointer-events:none;z-index:35}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:no-preference){.xp i,.sb i,.bar i{transition:width .6s ease}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="3"/><circle cx="32" cy="32" r="22" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.5" stroke-dasharray="2 3"/><path d="M21 33.5l7 7 15-16" fill="none" stroke="#f0b34c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><h1>Certifié</h1><small>French → English</small></div>
+  </div>
+  <span id="hdr">Beginner</span>
+  <button class="iconbtn" id="opensettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</div></header>
+
+<main id="main">
+<section class="view" id="v-today">
+  <div class="panel hero">
+    <svg class="stamp" id="stamp" viewBox="0 0 200 200" role="img" aria-label="Vocabulary known"></svg>
+    <div>
+      <div class="lvsub" id="lvnum">Level 1 of 6</div>
+      <div class="lvname" id="lvname">Beginner</div>
+      <div class="xp"><i id="xpbar" style="width:0%"></i></div>
+      <div class="lvsub" id="xptext">0 XP</div>
+      <div class="ladder" id="ladder"></div>
+      <div class="count" id="countdown" hidden></div>
+    </div>
+    <button class="go" id="gostudy" style="grid-column:1/-1"></button>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <h3>Today <small id="todaydate"></small></h3>
+  <div class="panel" id="tasks"></div>
+  <h3>Knowledge map <small>tap a deck to study it</small></h3>
+  <div class="panel"><div id="decks"></div>
+    <div class="legend"><span><i class="c-m"></i>Mastered</span><span><i class="c-k"></i>Known</span><span><i class="c-l"></i>Learning</span><span><i style="background:var(--soft)"></i>Not seen</span></div>
+  </div>
+  <div id="markspanel"></div>
+  <h3>Last 14 days <small>cards reviewed</small></h3>
+  <div class="panel"><div class="act" id="act"></div></div>
+  <h3>Streak <small>last 5 weeks</small></h3>
+  <div class="panel"><div class="ribbon" id="ribbon"></div><div class="small" style="margin-top:10px">Gold: cards, drills and reading all done. Pale: some done.</div></div>
+</section>
+
+<section class="view" id="v-cards">
+  <h2>Vocabulary</h2>
+  <p class="sub">Type the English. Spaced repetition brings each word back just before you'd forget it.</p>
+  <div class="seg" id="cmode"><button data-m="cards" aria-pressed="true">Write it</button><button data-m="quiz" aria-pressed="false">Multiple choice</button></div>
+  <div class="chips" id="cats"></div>
+  <div id="due"></div>
+  <div id="cardzone"></div>
+</section>
+
+<section class="view" id="v-grammar">
+  <h2>Grammar traps</h2>
+  <p class="sub">Where French speakers lose marks. Drill first, then check the rules.</p>
+  <div class="panel" id="drill"></div>
+  <h3>All rules <small id="rulecount"></small></h3>
+  <input class="search" id="rulesearch" type="search" placeholder="Search rules" aria-label="Search rules">
+  <div class="panel" id="rules"></div>
+</section>
+
+<section class="view" id="v-practice">
+  <h2>Timed practice</h2>
+  <p class="sub">Test conditions: no machine translation, no AI. Dictionary only.</p>
+  <div class="seg" id="pkind"><button data-k="q" aria-pressed="true">10 min</button><button data-k="p" aria-pressed="false">1 hour</button><button data-k="r" aria-pressed="false">Revision</button></div>
+  <div class="chips" id="ptabs"></div>
+  <div id="pzone"></div>
+</section>
+
+<section class="view" id="v-test">
+  <h2>The test</h2>
+  <p class="sub">Certified Translator, French into English.</p>
+  <div class="facts">
+    <div class="fact"><b>≈3.5 h</b><span>online, supervised by webcam</span></div>
+    <div class="fact"><b>2 of 3</b><span>texts to translate, ~250 words each</span></div>
+    <div class="fact"><b>1</b><span>revision of a ~250-word translation</span></div>
+    <div class="fact"><b>3</b><span>tasks, each from a different domain</span></div>
+    <div class="fact"><b>2+</b><span>examiners mark with a rubric</span></div>
+    <div class="fact"><b>$605</b><span>test fee per direction (2026–27)</span></div>
+  </div>
+  <h3>Allowed and not allowed</h3>
+  <div class="panel"><p style="margin:0 0 8px"><span class="r">Allowed:</span> paper and offline dictionaries, and the online resources on NAATI's approved list.</p><p style="margin:0"><b style="color:var(--red)">Not allowed:</b> Google Translate, DeepL, AI tools, translation software, spellcheck.</p></div>
+  <h3>The revision task</h3>
+  <div class="panel"><p style="margin:0">You get a French text and a weak English translation. Fix errors of meaning, grammar, conventions and register, and explain your changes. Don't rewrite for style: examiners are told to look for real errors, not preferences. Train it in <b>Practice → Revision</b>.</p></div>
+  <h3>Formats cheat sheet</h3>
+  <div class="scroll panel"><table>
+    <thead><tr><th>French</th><th>English</th></tr></thead>
+    <tbody id="formats"></tbody>
+  </table></div>
+  <h3>Your steps <small id="stepcount"></small></h3>
+  <div class="panel" id="steps"></div>
+  <h3>Free official practice</h3>
+  <div class="panel"><p style="margin:0">NAATI Learn has a free Certified Translator preparation module with practice tasks on the real test platform, and the marking rubrics. A paid practice translation marked by an examiner costs $165.</p><div class="row" style="margin-top:12px"><a class="btn" href="https://learn.naati.com.au/" target="_blank" rel="noopener">NAATI Learn</a><a class="btn ghost" href="https://www.naati.com.au/certification/ct" target="_blank" rel="noopener">Test page</a></div></div>
+  <p class="small">Format and fees from naati.com.au, checked November 2026. Fees valid 1 July 2026 to 30 June 2027. Always check NAATI's site before you book. Certifié is an independent study app and is not affiliated with or endorsed by NAATI.</p>
+</section>
+</main>
+<nav><div class="in" id="tabs"></div></nav>
+
+<div class="veil" id="settings" role="dialog" aria-modal="true" aria-label="Settings"><div class="sheet">
+  <div class="grab"></div>
+  <div class="row between" style="margin-bottom:6px"><h2 style="font-size:28px">Settings</h2><button class="btn ghost" data-close>Done</button></div>
+  <div class="panel" style="padding:4px 16px">
+    <div class="set"><div><b>Test date</b><small>Shows a countdown on Today</small></div><input type="date" id="testdate" aria-label="Test date"></div>
+    <div class="set" id="remrow"><div><b>Daily reminder</b><small id="remnote">A nudge to keep your streak</small></div><input type="checkbox" class="switch" id="remon" aria-label="Daily reminder"></div>
+    <div class="set" id="remtimerow"><div><b>Reminder time</b></div><input type="time" id="remtime" value="19:00" aria-label="Reminder time"></div>
+    <div class="set"><div><b>New words per day</b><small>Reviews always come first</small></div><select id="newday" aria-label="New words per day"><option>10</option><option>15</option><option>20</option><option>30</option><option>40</option></select></div>
+    <div class="set"><div><b>Appearance</b></div><select id="theme" aria-label="Appearance"><option value="auto">Automatic</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+    <div class="set"><div><b>Haptics</b><small>Little taps on right and wrong answers</small></div><input type="checkbox" class="switch" id="haptic" aria-label="Haptics" checked></div>
+  </div>
+  <div class="panel" style="padding:4px 16px">
+    <div class="set"><div><b>Back up progress</b><small>Save a file you can restore later</small></div><button class="btn" id="exportbtn">Back up</button></div>
+    <div class="set"><div><b>Restore</b><small>From a backup file</small></div><label class="btn" for="importfile">Restore</label><input type="file" id="importfile" accept="application/json,.json" hidden></div>
+    <div class="set"><div><b>Reset progress</b><small>Deletes everything on this phone</small></div><button class="btn" id="resetbtn" style="color:var(--red)">Reset</button></div>
+  </div>
+  <div class="panel">
+    <b>About</b>
+    <p class="small" style="margin:6px 0 0">Certifié helps French speakers prepare for the Australian Certified Translator test (French into English). It's an independent study app, not affiliated with or endorsed by NAATI. Practice texts are written for this app in the style of test passages; model answers are one good version, not the only one.</p>
+    <p class="small" style="margin:10px 0 0">Your progress stays on this phone. The app collects no data. <a href="https://adrienbuffin1-sketch.github.io/certifie/#privacy" target="_blank" rel="noopener">Privacy policy</a> · <a href="https://adrienbuffin1-sketch.github.io/certifie/#support" target="_blank" rel="noopener">Support</a></p>
+    <p class="small" style="margin:10px 0 0">Fonts: Newsreader and Instrument Sans (SIL Open Font License). <span id="ver">Version 1.0</span></p>
+  </div>
+</div></div>
+
+<div id="onb" role="dialog" aria-modal="true" aria-label="Welcome"><div class="wrap">
+  <svg class="big" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="ring" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"/></defs><circle cx="100" cy="100" r="92" fill="none" stroke="#fff" stroke-width="5"/><circle cx="100" cy="100" r="58" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 5"/><text font-family="Inst,sans-serif" font-size="13.5" font-weight="700" letter-spacing="4.2" fill="#fff" fill-opacity=".85"><textPath href="#ring" startOffset="2%">FRANÇAIS · ENGLISH · TRADUCTEUR CERTIFIÉ ·</textPath></text><path d="M70 103l20 20 42-46" fill="none" stroke="#f0b34c" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h2>Earn your stamp.</h2>
+  <p>A daily trainer for the Certified Translator test, French into English.</p>
+  <ul>
+    <li><i>1</i><span><b>650+ words that cost marks</b>False friends, admin, legal, health, contracts. Spaced repetition.</span></li>
+    <li><i>2</i><span><b>Grammar traps</b>The English errors French speakers make, as quick drills.</span></li>
+    <li><i>3</i><span><b>Timed translations</b>10-minute drills, test-length passages and a tap-the-error revision trainer.</span></li>
+  </ul>
+  <label for="onbdate">When is your test? (optional)</label>
+  <input type="date" id="onbdate">
+  <button class="go" id="onbgo">Start training</button>
+  <div class="fine">Independent study app. Not affiliated with or endorsed by NAATI.</div>
+</div></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas class="burst" id="burst"></canvas>
+
+<script src="data.js"></script>
+<script src="data2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
