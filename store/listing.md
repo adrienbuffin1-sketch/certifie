@@ -25,6 +25,7 @@ Every part of the app targets the places candidates lose marks.
 WORDS THAT COST MARKS
 • 650+ cards: false friends (actuellement, éventuellement, important…), civil status, migration, education, work, tax, housing, building, insurance, legal, police, health, government, contracts, manuals and business letters
 • Type the English, not just flip: answers are checked, small typos forgiven
+• Miss a word and you write it correctly once to lock it in
 • Spaced repetition brings each word back just before you'd forget it
 • Weak-words deck and a multiple-choice mode for quick sessions
 
@@ -44,7 +45,7 @@ REVISION TASK TRAINER
 • Rewrite mode to practise writing the corrections
 
 STAY ON TRACK
-• Today plan: 20 cards, 5 drills, one French news story read in both languages, a timed passage a few times a week
+• Today plan: 20 cards, 5 drills, one French news story read in both languages, a 10-minute translation
 • Streaks, levels from Beginner to Certified level, a knowledge map of every deck and a countdown to your test date
 • Optional daily reminder
 • Test facts, a formats cheat sheet and a checklist of the steps to booking your test
