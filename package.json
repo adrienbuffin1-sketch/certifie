@@ -2,8 +2,10 @@
   "name": "certifie",
   "version": "1.0.0",
   "private": true,
-  "description": "Certifié - French to English translator test prep (Capacitor iOS app)",
-  "scripts": { "sync": "cap sync ios" },
+  "description": "Certifi\u00e9 - French to English translator test prep (Capacitor iOS app)",
+  "scripts": {
+    "sync": "cap sync ios"
+  },
   "dependencies": {
     "@capacitor/core": "^6.2.0",
     "@capacitor/ios": "^6.2.0",
@@ -14,7 +16,8 @@
     "@capacitor/preferences": "^6.0.0",
     "@capacitor/share": "^6.0.0",
     "@capacitor/splash-screen": "^6.0.0",
-    "@capacitor/status-bar": "^6.0.0"
+    "@capacitor/status-bar": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",

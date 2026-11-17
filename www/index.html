@@ -275,6 +275,14 @@ td:first-child{font-family:News,serif;font-size:16px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);font:600 14px Inst;padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:40;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .burst{position:fixed;inset:0;pointer-events:none;z-index:35}
+
+/* keyboard open: give the card the room */
+html.kb nav{display:none}
+html.kb #v-cards>h2,html.kb #v-cards>.sub,html.kb #cmode,html.kb #cats,html.kb #due{display:none}
+html.kb #v-cards .flash{min-height:0;padding:30px 16px 18px;box-shadow:var(--shadow)}
+html.kb #v-cards .flash .hw{font-size:30px}
+html.kb #v-cards .flash .inline{margin-top:16px}
+html.kb main{padding-top:10px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(prefers-reduced-motion:no-preference){.xp i,.sb i,.bar i{transition:width .6s ease}}
 </style>

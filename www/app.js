@@ -288,6 +288,14 @@ $("ver").textContent="Version "+VERSION;
 function maybeOnboard(){if(S.onb)return;$("onb").classList.add("on")}
 $("onbgo").addEventListener("click",()=>{S.test=$("onbdate").value||S.test;S.onb=true;save();haptic("win");$("onb").classList.remove("on");render(curView)});
 
+
+/* keyboard: keep the field in view */
+const kbOn=()=>{document.documentElement.classList.add("kb")};
+const kbOff=()=>{document.documentElement.classList.remove("kb")};
+const reveal=()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName)&&a.type!=="date"&&a.type!=="time"){const box=a.closest(".flash,.retype,.panel")||a;box.scrollIntoView({block:a.tagName==="TEXTAREA"?"start":"center",behavior:"smooth"})}};
+document.addEventListener("focusin",e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName)&&!/date|time|checkbox|file/.test(e.target.type)){if(!NATIVE&&matchMedia("(pointer:coarse)").matches)kbOn();setTimeout(reveal,350)}});
+document.addEventListener("focusout",()=>{if(!NATIVE)setTimeout(()=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA/.test(a.tagName))kbOff()},150)});
+if(window.visualViewport&&!NATIVE)visualViewport.addEventListener("resize",()=>setTimeout(reveal,50));
 /* ---------- boot ---------- */
 function render(v){if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar")renderGrammar();if(v==="practice")renderPractice();if(v==="test")renderSteps();updateBadge()}
 applyTheme();
@@ -306,6 +314,7 @@ if(!NATIVE)(async()=>{try{
   document.addEventListener("visibilitychange",()=>{if(document.hidden&&cloudT){clearTimeout(cloudT);cloudT=null;push()}});
 }catch(e){}})();
 if(NATIVE){
+  const kb=P("Keyboard");if(kb){kb.setAccessoryBarVisible({isVisible:false}).catch(()=>{});kb.addListener("keyboardWillShow",kbOn);kb.addListener("keyboardDidShow",()=>setTimeout(reveal,30));kb.addListener("keyboardWillHide",kbOff)}
   const pref=P("Preferences");if(pref)pref.get({key:KEY}).then(r=>{if(!r||!r.value)return save();try{const x=JSON.parse(r.value);if((x.ts||0)>(S.ts||0)){load(x);applyTheme();render(curView);if(S.onb)$("onb").classList.remove("on")}else save()}catch(e){}}).catch(()=>{});
   const sb=P("StatusBar");if(sb)sb.setStyle({style:"DARK"}).catch(()=>{});
   const ss=P("SplashScreen");if(ss)setTimeout(()=>ss.hide().catch(()=>{}),200);
