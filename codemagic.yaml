@@ -1,6 +1,19 @@
 # Codemagic builds the iPhone app in the cloud (no Mac needed) and sends it to TestFlight.
 # Uses the same App Store Connect API key as Lumen Deep and Mandala Pop ("LumenDeepKey").
 workflows:
+  register-bundle-id:
+    # One-off: registers com.certifie.app with Apple through the API key (run once before the first build).
+    name: Certifié - register bundle ID
+    max_build_duration: 10
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: LumenDeepKey
+    scripts:
+      - name: Register com.certifie.app
+        script: |
+          app-store-connect bundle-ids list --bundle-id-identifier com.certifie.app --strict-match-identifier || true
+          app-store-connect bundle-ids create com.certifie.app --name "Certifie" --platform IOS || echo "Already registered or not created - see the line above"
+          app-store-connect bundle-ids list --bundle-id-identifier com.certifie.app --strict-match-identifier
   ios-testflight:
     name: Certifié - iOS TestFlight
     max_build_duration: 45
