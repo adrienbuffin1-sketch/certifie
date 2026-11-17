@@ -26,7 +26,7 @@ workflows:
         bundle_identifier: com.certifie.app
       vars:
         # App Store Connect > Certifié > App Information > Apple ID (fill in after creating the app)
-        APP_STORE_APPLE_ID: 0
+        APP_STORE_APPLE_ID: 6835843029
       node: 20
       xcode: latest
       cocoapods: default
