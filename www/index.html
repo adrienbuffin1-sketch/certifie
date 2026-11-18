@@ -10,9 +10,13 @@
 /* Certifié — French → English translator test prep.
    Idea: an official certificate. Deep navy, guilloche security engraving, cool security paper,
    intaglio-blue ink for actions, gold foil for rewards.
-   Type: Big Shoulders Display for words, headings and numbers + Saira for the interface. Bundled, works offline. */
-@font-face{font-family:"Disp";src:url(fonts/bigshoulders.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:"Text";src:url(fonts/saira.woff2) format("woff2");font-weight:100 900;font-stretch:50% 125%;font-style:normal;font-display:swap}
+   Type: Newsreader for words and headings + Instrument Sans for the interface. Bundled, works offline. */
+@font-face{font-family:"Disp";src:url(fonts/newsreader.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
+@font-face{font-family:"Disp";src:url(fonts/newsreader-italic.woff2) format("woff2");font-weight:200 800;font-style:italic;font-display:swap}
+@font-face{font-family:"Text";src:url(fonts/instrument-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Text";src:url(fonts/instrument-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Text";src:url(fonts/instrument-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Text";src:url(fonts/instrument-700.woff2) format("woff2");font-weight:700;font-display:swap}
 
 :root{
   --bg:#eceee8;--paper:#f5f6f2;--card:#ffffff;--ink:#16203a;--mute:#5d6577;--line:#d9ddd3;--soft:#e2e6dd;--soft2:#e3e8fb;
@@ -481,19 +485,10 @@ nav button .dot{top:3px;left:calc(50% + 10px);background:var(--gold);color:#1b14
 #onb{background:var(--brand)}
 .onbseal{background:url(img/rosette.svg) center/250px 250px no-repeat;padding:20px 0 4px;margin:0 auto 6px}
 
-/* type: Big Shoulders Display + Saira */
-h1,h2,h3,.hw,.serif,.lvname,.kpi b,.timer,.fact b,.score b,.gword,.gcard b,.srow b,.stt{font-family:Disp,sans-serif!important;font-weight:800!important;letter-spacing:.005em!important}
-h2{font-size:clamp(28px,7.4vw,34px)}
-.flash .hw{font-weight:800!important;font-size:44px}
-h2{font-size:clamp(32px,8.4vw,40px)!important}
-h3{font-size:22px!important}
-.kpi b{font-size:34px!important}
-.lvname{font-size:clamp(28px,7.4vw,34px)!important}
-.exfr,.cfr,.pcell.L,td:first-child{font-family:Text,sans-serif!important;font-weight:500;letter-spacing:-.005em}
-.cfr{font-size:19px}
-.bsep{font:600 13px Text,sans-serif!important;font-style:normal!important}
-.stamp text{font-family:Disp,sans-serif}
-#onb li i{font-family:Disp,sans-serif}
+/* type: Newsreader + Instrument Sans (Adrien's pick: the original fonts) */
+.src,.spot,.pfr,.exfr,.cfr,.pcell.L{font-family:Disp,Georgia,serif}
+.pfr{font-size:18px;line-height:1.55}
+.bsep{font:italic 500 15px Disp,serif}
 </style>
 </head>
 <body>
@@ -616,7 +611,7 @@ h3{font-size:22px!important}
     <b>About</b>
     <p class="small" style="margin:6px 0 0">Certifié helps French speakers prepare for the Australian Certified Translator test (French into English). It's an independent study app, not affiliated with or endorsed by NAATI. Practice texts are written for this app in the style of test passages; model answers are one good version, not the only one.</p>
     <p class="small" style="margin:10px 0 0">Your progress stays on this phone. The app collects no data. <a href="https://adrienbuffin1-sketch.github.io/certifie/#privacy" target="_blank" rel="noopener">Privacy policy</a> · <a href="https://adrienbuffin1-sketch.github.io/certifie/#support" target="_blank" rel="noopener">Support</a></p>
-    <p class="small" style="margin:10px 0 0">Fonts: Big Shoulders Display and Saira (SIL Open Font License). <span id="ver">Version 1.0</span></p>
+    <p class="small" style="margin:10px 0 0">Fonts: Newsreader and Instrument Sans (SIL Open Font License). <span id="ver">Version 1.0</span></p>
   </div>
 </div></div>
 
