@@ -92,13 +92,13 @@ const T=()=>{const d=today();S.counts[d]=S.counts[d]||{cards:0,drill:0,newc:0};S
 function haptic(kind){if(!S.set.haptic)return;const h=P("Haptics");if(h){if(kind==="ok")h.impact({style:"LIGHT"}).catch(()=>{});else if(kind==="bad")h.notification({type:"WARNING"}).catch(()=>{});else if(kind==="win")h.notification({type:"SUCCESS"}).catch(()=>{});else h.selectionChanged&&h.selectionChanged().catch(()=>{})}}
 let toastT;function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200)}
 function burst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const c=$("burst"),x=c.getContext("2d");const W=c.width=innerWidth*devicePixelRatio,H=c.height=innerHeight*devicePixelRatio;
-  const cols=["#e7c982","#5f1730","#2a43b8","#c39233","#ffffff"];const ps=Array.from({length:90},()=>({x:W/2,y:H*.42,vx:(Math.random()-.5)*16*devicePixelRatio,vy:(-Math.random()*14-4)*devicePixelRatio,r:(3+Math.random()*4)*devicePixelRatio,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
+  const cols=["#e7c982","#152a63","#2a43b8","#c39233","#ffffff"];const ps=Array.from({length:90},()=>({x:W/2,y:H*.42,vx:(Math.random()-.5)*16*devicePixelRatio,vy:(-Math.random()*14-4)*devicePixelRatio,r:(3+Math.random()*4)*devicePixelRatio,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
   let f=0;(function step(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45*devicePixelRatio;p.a+=.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(++f<90)requestAnimationFrame(step);else x.clearRect(0,0,W,H)})()}
 
 /* ---------- theme ---------- */
 const mq=matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(){const t=S.set.theme;const dark=t==="dark"||(t==="auto"&&mq.matches);document.documentElement.classList.toggle("dark",dark);
-  document.querySelector('meta[name=theme-color]').content=dark?"#3d0f1f":"#5f1730"}
+  document.querySelector('meta[name=theme-color]').content=dark?"#0c1838":"#152a63"}
 mq.addEventListener?mq.addEventListener("change",applyTheme):mq.addListener(applyTheme);
 
 /* ---------- tabs ---------- */

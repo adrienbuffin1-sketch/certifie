@@ -4,7 +4,7 @@
   "webDir": "www",
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#5f1730",
+    "backgroundColor": "#152a63",
     "scrollEnabled": false,
     "limitsNavigationsToAppBoundDomains": false
   },
@@ -12,7 +12,7 @@
     "SplashScreen": {
       "launchShowDuration": 1500,
       "launchAutoHide": false,
-      "backgroundColor": "#5f1730",
+      "backgroundColor": "#152a63",
       "showSpinner": false
     },
     "StatusBar": {
@@ -20,7 +20,7 @@
       "overlaysWebView": true
     },
     "LocalNotifications": {
-      "iconColor": "#5f1730"
+      "iconColor": "#152a63"
     },
     "Keyboard": {
       "resize": "native",
