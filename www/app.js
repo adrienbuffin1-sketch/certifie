@@ -38,7 +38,7 @@ function exBlock(c,full){const x=EX[c[1]];if(!x)return "";return `<div class="ex
 document.addEventListener("click",e=>{const b=e.target.closest(".say");if(b){e.preventDefault();say(b.dataset.say)}});
 
 /* ---------- state ---------- */
-const BASE=()=>({box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0,mine:[],nread:{},ndraft:{}});
+const BASE=()=>({box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0,mine:[],nread:{},ndraft:{},game:{best:{}}});
 let S=BASE();
 function load(raw){try{const x=typeof raw==="string"?JSON.parse(raw):raw;if(x&&typeof x==="object"){const b=BASE();S=Object.assign(b,x);S.set=Object.assign(b.set,x.set||{});return true}}catch(e){}return false}
 try{load(localStorage.getItem(KEY))}catch(e){}
@@ -77,7 +77,7 @@ let curView="today";
 function show(v){if(!TABS.some(t=>t[0]===v))v="today";curView=v;document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
   if(location.hash.slice(1)!==v)history.replaceState(null,"","#"+v);render(v);$("main").scrollTop=0}
-$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){haptic();show(b.dataset.v)}});
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){haptic();if(typeof gQuit==="function")gQuit();show(b.dataset.v)}});
 window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
 
 /* ---------- stats ---------- */
@@ -90,7 +90,7 @@ function stats(){const decks=[...new Set(CARDS.map(c=>c[0]))];const st={};decks.
   let drills=0,reviews=0;Object.values(S.counts).forEach(c=>{drills+=c.drill||0;reviews+=c.cards||0});
   const passages=Object.keys(S.drafts).filter(k=>k.startsWith("done_")&&S.drafts[k]).length;
   const spots=Object.values(S.spot).filter(x=>x&&x.complete).length;
-  const xp=L*2+K*6+M*10+drills*2+passages*60+spots*40;return {decks,st,L,K,M,drills,reviews,passages,spots,xp}}
+  const xp=L*2+K*6+M*10+drills*2+passages*60+spots*40+((S.game&&S.game.xp)||0);return {decks,st,L,K,M,drills,reviews,passages,spots,xp}}
 function autoTicks(){const d=T();const c=S.counts[d];if(c.cards>=20)S.done[d].cards=true;if(c.drill>=5)S.done[d].drill=true}
 const dayComplete=d=>{const x=S.done[d]||{};return x.cards&&x.drill&&x.read};
 function streakOf(){let streak=0,x=today();if(!dayComplete(x))x=addDays(x,-1);while(dayComplete(x)){streak++;x=addDays(x,-1)}return streak}
@@ -146,6 +146,8 @@ function renderCards(){syncMine();if(CATS.length!==2+new Set(CARDS.map(c=>c[0]))
   const p=pool();const due=p.filter(isDue).length;const nw=p.filter(isNew).length;const learnt=p.filter(c=>(S.box[idOf(c)]||0)>=3).length;
   $("due").innerHTML=`<div class="stat"><span><b>${due}</b> to review</span><span><b>${Math.min(nw,newLeft())}</b> new today</span><span><b>${learnt}</b>/${p.length} known</span></div><div class="bar"><i style="width:${p.length?learnt/p.length*100:0}%"></i></div>`;
   document.querySelectorAll("#cmode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===mode));
+  $("v-cards").classList.toggle("gm",mode==="game");
+  if(mode==="game")return renderGame();
   if(mode==="quiz")return renderQuiz();
   if(cur&&!p.includes(cur))cur=null;
   if(!cur&&!chk)pickCard();
@@ -169,7 +171,7 @@ function renderQuiz(){if(!quiz)newQuiz();if(!cur){$("cardzone").innerHTML=`<div 
   $("cardzone").innerHTML=`<div class="panel"><div class="eyebrow">${esc(cur[0])}</div><div class="hwrow" style="justify-content:flex-start"><div class="hw" style="font-size:32px;margin:8px 0 4px">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${quiz.ans===null&&EX[cur[1]]?exBlock(cur,false):""}<div class="small">Choose the best English</div><div class="opts">${quiz.opts.map((o,i)=>`<button class="opt ${quiz.ans!==null?(o===cur?"ok":i===quiz.ans?"bad":""):""}" data-i="${i}" ${quiz.ans!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${quiz.ans!==null?`${cur[3]?`<p class="small" style="margin-top:12px">${esc(cur[3])}</p>`:""}${exBlock(cur,true)}${quiz.fix?retypeBlock(quiz.fix):""}${quiz.fix&&!quiz.fix.fixed?`<button class="btn p wide" id="qcheck" style="margin-top:12px">Check</button>`:`<button class="btn p wide" id="qnext" style="margin-top:12px">Next</button>`}`:""}</div>`;const r=$("retype");if(r)r.focus({preventScroll:true})}
 $("cardzone").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="retype"&&mode==="quiz"){e.preventDefault();$("qcheck")&&$("qcheck").click()}});
 $("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();cat=b.dataset.c;cur=null;quiz=null;chk=null;renderCards()});
-$("cmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();mode=b.dataset.m;cur=null;chk=null;quiz=null;renderCards()});
+$("cmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();gQuit();mode=b.dataset.m;cur=null;chk=null;quiz=null;renderCards()});
 $("cardzone").addEventListener("submit",e=>{e.preventDefault();if(chk&&!chk.ok&&!chk.fixed){const r=$("retype");if(r&&!r.value.trim()){r.focus();return}if(r)tryRetype(chk,r.value);renderCards();return}if(chk){grade(chk.ok);return}const a=$("answer");if(!a.value.trim()){a.focus();return}chk=check(a.value);haptic(chk.ok?"ok":"bad");renderCards()});
 $("cardzone").addEventListener("click",e=>{
   if(e.target.id==="exhint"){hint=true;renderCards();const a=$("answer");if(a)a.focus({preventScroll:true});return}
@@ -180,6 +182,130 @@ $("cardzone").addEventListener("click",e=>{
   if(e.target.id==="extra"){chk=null;practiceCard();renderCards();return}
   const o=e.target.closest(".opt");if(o&&quiz&&quiz.ans===null){quiz.ans=+o.dataset.i;const ok=quiz.opts[quiz.ans]===cur;haptic(ok?"ok":"bad");if(!ok)quiz.fix={};const d=T();S.counts[d].cards++;if(!ok){const k=idOf(cur);if(!isNew(cur)){S.box[k]=0;S.next[k]=today()}}save();renderQuiz();return}
   if(e.target.id==="qnext"){quiz=null;renderCards()}});
+
+/* ---------- games hub: levels per game, stars, XP ---------- */
+const GSIZE=10,GLIMIT=8000;
+const SETS=(()=>{const out=[];const decks=[...new Set(CARDS.filter(c=>c[0]!==MYDECK).map(c=>c[0]))];decks.forEach(d=>{const cs=CARDS.filter(c=>c[0]===d);const n=Math.max(1,Math.round(cs.length/GSIZE));for(let i=0;i<n;i++){const part=cs.slice(Math.round(i*cs.length/n),Math.round((i+1)*cs.length/n));out.push({deck:d,part:n>1?i+1:0,of:n,cards:part})}});return out})();
+function maskEx(c){const x=EX[c[1]];if(!x)return null;const h=hl(x[0],c[1]);const m=h.match(/<mark>(.*?)<\/mark>/);if(!m)return null;return {fr:h.replace(/<mark>.*?<\/mark>/,'<span class="gap">'+"_".repeat(Math.min(10,Math.max(4,m[1].length)))+"</span>"),en:x[1],word:m[1]}}
+const GAMES=[
+ {id:"speed",name:"Speed",skill:"Recognition",desc:"A French word, four answers, 8 seconds each. All 10 right unlocks the next set. Speed earns stars.",
+  icon:'<path d="M13 3L5 13.5h6L10 21l9-11.5h-6z"/>'},
+ {id:"pairs",name:"Pairs",skill:"Association",desc:"Match 5 French words to their English, two boards per set. One slip allowed. Speed earns stars.",
+  icon:'<rect x="3.5" y="4" width="7" height="7" rx="1.6"/><rect x="13.5" y="13" width="7" height="7" rx="1.6"/><path d="M10.5 7.5h3a3 3 0 013 3V13M13.5 16.5h-3a3 3 0 01-3-3V11"/>'},
+ {id:"context",name:"In context",skill:"Usage",desc:"A real French sentence with a gap, the English underneath. Pick the missing word. All right unlocks the next set.",
+  icon:'<path d="M4 7h16M4 12h5M15 12h5M4 17h11"/><rect x="9.5" y="10" width="5" height="4" rx="1"/>'},
+ {id:"blitz",name:"True or false",skill:"Fast recall",desc:"60 seconds. Is the translation right? Every 5 in a row raises the multiplier. Words come from sets you've unlocked.",
+  icon:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.6M10 2.5h4"/>',endless:true}];
+const RANKS=[["Rookie",0],["Learner",300],["Word hunter",900],["Fluent player",2000],["Terminologist",3800],["Wordsmith",6500],["Master translator",10000]];
+function gs(){S.game=S.game||{};const g=S.game;g.g=g.g||{};if(g.best&&!g.g.speed){g.g.speed={best:g.best};delete g.best}GAMES.forEach(x=>{g.g[x.id]=g.g[x.id]||{best:{}};g.g[x.id].best=g.g[x.id].best||{}});g.xp=g.xp||0;return g}
+const gsets=id=>id==="context"?SETS.map(st=>({...st,cards:st.cards.filter(c=>maskEx(c))})).filter(st=>st.cards.length>=4):SETS;
+let CSETS=null;const setsOf=id=>id==="context"?(CSETS=CSETS||gsets("context")):SETS;
+const gBest=(id,i)=>gs().g[id].best[i];
+const gMastered=(id,i)=>{const b=gBest(id,i);return !!(b&&b.m)};
+const gOpen=(id,i)=>i===0||gMastered(id,i-1);
+const gNext=id=>setsOf(id).findIndex((_,i)=>!gMastered(id,i));
+const setName=s=>esc(s.deck)+(s.part?` ${s.part}/${s.of}`:"");
+const starRow=n=>`<span class="stars" aria-label="${n} of 3 stars">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
+const gIcon=g=>`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
+let GH=null,G=null,gRAF=0,gT=0;
+function gQuit(){cancelAnimationFrame(gRAF);clearTimeout(gT);G=null}
+function gMiss(c){const d=T();if(!isNew(c)){const id=idOf(c);S.box[id]=0;S.next[id]=today()}}
+function gCount(){const d=T();S.counts[d].cards++}
+function gOpts(c,field){const same=CARDS.filter(x=>x!==c&&x[0]===c[0]&&x[field]!==c[field]);const pool=same.length>=3?same:CARDS.filter(x=>x!==c&&x[field]!==c[field]);const o=[c];let g=0;while(o.length<4&&g++<300){const x=pool[Math.random()*pool.length|0];if(!o.some(y=>y[field]===x[field]))o.push(x)}return o.sort(()=>Math.random()-.5)}
+function gRank(){const xp=gs().xp;let i=0;RANKS.forEach((r,k)=>{if(xp>=r[1])i=k});const nx=RANKS[i+1];return {i,name:RANKS[i][0],xp,nx,pct:nx?(xp-RANKS[i][1])/(nx[1]-RANKS[i][1]):1}}
+function gAward(xp){const before=gRank().i;gs().xp+=xp;const after=gRank();return after.i>before?after.name:null}
+/* finish a set-based round */
+function gFinish(sum){const g=gs().g[G.id];const was=g.best[G.set]||{};const sets=setsOf(G.id);const unlock=sum.m&&!was.m&&G.set+1<sets.length;
+  g.best[G.set]={m:was.m||sum.m,stars:Math.max(was.stars||0,sum.st),pts:Math.max(was.pts||0,sum.pts)};
+  const xp=Math.round(sum.pts/20)+(sum.m&&!was.m?50:0)+(sum.st>(was.stars||0)?20*(sum.st-(was.stars||0)):0);const rank=gAward(xp);
+  G.done=true;G.sum={...sum,unlock,xp,rank,record:sum.pts>(was.pts||0)&&!!was.pts};save();if(sum.m){burst();haptic("win")}renderGame()}
+function gStart(id,i){gQuit();const sets=setsOf(id);if(id==="blitz")return bStart();const cs=sets[i].cards.slice().sort(()=>Math.random()-.5);
+  G={id,set:i,cs,q:0,res:[],pick:null,done:false,t0:performance.now()};
+  if(id==="speed"){G.opts=gOpts(cs[0],2);renderGame();sGo()}
+  else if(id==="context"){G.opts=gOpts(cs[0],1);G.m=maskEx(cs[0]);renderGame()}
+  else if(id==="pairs"){G.boards=[cs.slice(0,Math.ceil(cs.length/2)),cs.slice(Math.ceil(cs.length/2))];G.b=0;G.slips=0;G.missed=new Set();pBoard();renderGame()}}
+/* speed */
+function sGo(){G.t0=performance.now();G.pick=null;cancelAnimationFrame(gRAF);const tick=()=>{if(!G||G.done||G.pick!==null||G.id!=="speed")return;const el=$("gbar");const left=1-(performance.now()-G.t0)/GLIMIT;if(el)el.style.transform=`scaleX(${Math.max(0,left)})`;if(left<=0){sAnswer(-1);return}gRAF=requestAnimationFrame(tick)};gRAF=requestAnimationFrame(tick)}
+function sAnswer(k){if(!G||G.pick!==null)return;const ms=Math.min(GLIMIT,performance.now()-G.t0);const c=G.cs[G.q];const ok=k>=0&&G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount();if(!ok)gMiss(c);
+  renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(!G)return;G.q++;if(G.q>=G.cs.length){const n=G.res.length,ok=G.res.filter(r=>r.ok).length,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
+    return gFinish({m:ok===n,st:ok<n?0:avg<=2500?3:avg<=4000?2:1,pts:G.res.reduce((a,r)=>a+(r.ok?Math.round(100+900*(1-r.ms/GLIMIT)):0),0),line:[[`${ok}/${n}`,"correct"],[(avg/1000).toFixed(1)+"s","avg per word"]],
+      hint:ok<n?`Get all ${n} right to unlock the next set.`:avg>2500?`Under ${avg>4000?"4":"2.5"}s a word for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
+    G.opts=gOpts(G.cs[G.q],2);G.pick=null;renderGame();sGo()},ok?420:1300)}
+/* context */
+function cAnswer(k){if(!G||G.pick!==null)return;const ms=performance.now()-G.t0;const c=G.cs[G.q];const ok=G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount();if(!ok)gMiss(c);renderGame()}
+function cNext(){G.q++;if(G.q>=G.cs.length){const n=G.res.length,ok=G.res.filter(r=>r.ok).length,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
+    return gFinish({m:ok===n,st:ok<n?0:avg<=5000?3:avg<=9000?2:1,pts:G.res.reduce((a,r)=>a+(r.ok?Math.round(200+800*Math.max(0,1-r.ms/15000)):0),0),line:[[`${ok}/${n}`,"correct"],[(avg/1000).toFixed(1)+"s","avg per sentence"]],
+      hint:ok<n?`Get all ${n} right to unlock the next set.`:avg>5000?`Under ${avg>9000?"9":"5"}s a sentence for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
+  G.opts=gOpts(G.cs[G.q],1);G.m=maskEx(G.cs[G.q]);G.pick=null;G.t0=performance.now();renderGame()}
+/* pairs */
+function pBoard(){const b=G.boards[G.b];G.L=b.slice().sort(()=>Math.random()-.5);G.R=b.slice().sort(()=>Math.random()-.5);G.gone=new Set();G.sel=null;G.bad=null}
+function pTap(side,i){if(!G||G.done)return;const c=(side==="L"?G.L:G.R)[i];if(G.gone.has(c))return;
+  if(!G.sel||G.sel.side===side){G.sel={side,c};haptic();renderGame();return}
+  const a=G.sel.c;if(a===c){G.gone.add(c);G.sel=null;haptic("ok");gCount();if(G.gone.size===G.boards[G.b].length){if(G.b+1<G.boards.length){G.b++;clearTimeout(gT);gT=setTimeout(()=>{pBoard();renderGame()},350)}else{const ms=performance.now()-G.t0,n=G.cs.length;clearTimeout(gT);gT=setTimeout(()=>gFinish({m:G.slips<=1,st:G.slips>1?0:ms<=25000?3:ms<=45000?2:1,pts:Math.max(0,Math.round(n*100+Math.max(0,60000-ms)/30-G.slips*150)),line:[[(ms/1000).toFixed(0)+"s","time"],[G.slips,G.slips===1?"slip":"slips"]],hint:G.slips>1?"One slip at most to unlock the next set.":ms>25000?`Under ${ms>45000?"45":"25"}s for the next star.`:"Top speed.",miss:[...G.missed]}),350)}}renderGame();return}
+  G.slips++;const fr=side==="L"?c:a;G.missed.add(fr);gMiss(fr);haptic("bad");G.bad=[a,c];G.sel=null;renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(G){G.bad=null;renderGame()}},500)}
+/* blitz: 60 s true/false */
+function bPool(){const out=[];SETS.forEach((st,i)=>{if(GAMES.some(g=>!g.endless&&(gOpen(g.id,i)&&g.id!=="context")))out.push(...st.cards)});return out.length?out:SETS[0].cards}
+function bQ(){const pool=G.pool;const c=pool[Math.random()*pool.length|0];const truth=Math.random()<.5;let shown=c;if(!truth){const o=gOpts(c,2).filter(x=>x!==c);shown=o[0]||c}G.cur={c,shown,truth:shown===c};G.pick=null}
+function bStart(){G={id:"blitz",pool:bPool(),score:0,streak:0,best:0,right:0,wrong:0,miss:[],done:false,t0:performance.now()};bQ();renderGame();cancelAnimationFrame(gRAF);
+  const tick=()=>{if(!G||G.id!=="blitz"||G.done)return;const left=1-(performance.now()-G.t0)/60000;const el=$("gbar");if(el)el.style.transform=`scaleX(${Math.max(0,left)})`;const t=$("bt");if(t)t.textContent=Math.ceil(Math.max(0,left)*60)+"s";if(left<=0)return bEnd();gRAF=requestAnimationFrame(tick)};gRAF=requestAnimationFrame(tick)}
+const bMult=()=>Math.min(4,1+Math.floor(G.streak/5));
+function bAnswer(yes){if(!G||G.done||G.pick!==null)return;const ok=yes===G.cur.truth;G.pick=yes;gCount();
+  if(ok){G.right++;G.score+=10*bMult();G.streak++;G.best=Math.max(G.best,G.streak);haptic(G.streak%5===0?"win":"ok")}else{G.wrong++;G.streak=0;haptic("bad");gMiss(G.cur.c);if(!G.miss.includes(G.cur.c))G.miss.push(G.cur.c)}
+  renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(G&&!G.done){bQ();renderGame()}},ok?220:900)}
+function bEnd(){cancelAnimationFrame(gRAF);clearTimeout(gT);const b=gs().g.blitz;const was=b.hi||0;b.hi=Math.max(was,G.score);const st=G.right>=35?3:G.right>=25?2:G.right>=15?1:0;b.stars=Math.max(b.stars||0,st);
+  const rank=gAward(Math.round(G.score/10));G.done=true;G.sum={blitz:true,st,pts:G.score,record:G.score>was&&was>0,first:!was,line:[[G.right,"right"],[G.wrong,"wrong"],["×"+Math.min(4,1+Math.floor(G.best/5)),"top multiplier"]],hint:st<3?`${[15,25,35][st]} right answers for the next star.`:"Three stars. Beat your score.",miss:G.miss,xp:Math.round(G.score/10),rank};save();if(st)burst();haptic("win");renderGame()}
+function renderGame(){const z=$("cardzone");gs();
+  if(!G&&!GH){const r=gRank();const tot=GAMES.filter(g=>!g.endless).reduce((a,g)=>a+setsOf(g.id).filter((_,i)=>gMastered(g.id,i)).length,0);
+    z.innerHTML=`<div class="grank"><div class="gmed">${r.i+1}</div><div style="flex:1;min-width:0"><div class="eyebrow" style="color:var(--gold-soft)">Game rank</div><b class="serif">${r.name}</b><div class="gxp"><i style="width:${Math.round(r.pct*100)}%"></i></div><small>${r.xp.toLocaleString()} XP${r.nx?` · ${(r.nx[1]-r.xp).toLocaleString()} to ${r.nx[0]}`:""} · ${tot} sets mastered</small></div></div>
+    <div class="ggrid">${GAMES.map(g=>{const sets=setsOf(g.id);const n=g.endless?0:sets.filter((_,i)=>gMastered(g.id,i)).length;const b=gs().g[g.id];return `<button class="gcard" data-gh="${g.id}" type="button"><span class="gic">${gIcon(g)}</span><b>${g.name}</b><span class="small">${g.skill}</span><span class="gmeta">${g.endless?(b.hi?`Best ${b.hi}`:"Not played")+" "+starRow(b.stars||0):`Set ${Math.min(n+1,sets.length)} of ${sets.length}`}</span>${g.endless?"":`<span class="gmini"><i style="width:${n/sets.length*100}%"></i></span>`}</button>`}).join("")}</div>
+    <p class="small" style="margin-top:12px">Missed words go back into your reviews, so the games feed your daily cards.</p>`;return}
+  if(!G){const g=GAMES.find(x=>x.id===GH);const sets=setsOf(g.id);
+    if(g.endless){const b=gs().g.blitz;z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button><div class="panel" style="text-align:center"><span class="gic big">${gIcon(g)}</span><h2 class="serif" style="margin:10px 0 6px">${g.name}</h2><p class="small">${g.desc}</p>${starRow(b.stars||0)}<p class="small">${b.hi?`Your best: <b>${b.hi}</b>`:"No score yet"} · 1★ 15 right · 2★ 25 · 3★ 35</p><p class="small">${bPool().length} words in play. Unlock more sets in the other games to add words.</p><button class="btn p wide" data-gs="0" type="button">Start · 60 seconds</button></div>`;return}
+    const nxt=gNext(g.id);const n=sets.filter((_,i)=>gMastered(g.id,i)).length;
+    z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button>
+    <div class="ghead"><div><b class="serif">${g.name}</b><span class="small">${g.desc}</span></div><div class="gprog"><b>${n}</b>/${sets.length}<small>mastered</small></div></div>
+    ${nxt>=0?`<button class="btn p wide" data-gs="${nxt}" style="margin-bottom:14px">${gBest(g.id,nxt)?"Retry":"Play"} set ${nxt+1} · ${setName(sets[nxt])}</button>`:`<p class="small">Every set mastered. Replay any set for three stars.</p>`}
+    <div class="gsets">${sets.map((st,i)=>{const b=gBest(g.id,i),open=gOpen(g.id,i);return `<button class="gset ${open?"":"locked"} ${b&&b.m?"m":""} ${i===nxt?"cur":""}" ${open?`data-gs="${i}"`:"disabled"} type="button"><span class="gn">${i+1}</span><span class="gd">${setName(st)}</span>${open?(b&&b.m?starRow(b.stars):`<span class="small">${b?"Not yet":"New"}</span>`):'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/></svg>'}</button>`}).join("")}</div>`;return}
+  if(G.done){const s=G.sum,g=GAMES.find(x=>x.id===G.id),sets=setsOf(G.id);const nextSet=!s.blitz&&s.m&&G.set+1<sets.length;
+    z.innerHTML=`<div class="panel gend ${s.m||s.st?"win":""}"><div class="eyebrow">${g.name}${s.blitz?"":` · Set ${G.set+1} · ${setName(sets[G.set])}`}</div><h2 class="serif" style="margin:8px 0 6px">${s.blitz?(s.record?"New best!":s.first?"First score":"Time"):s.m?(s.unlock?`Mastered. Set ${G.set+2} unlocked`:"Mastered"):"So close"}</h2>${starRow(s.st)}
+      <div class="gstats">${s.line.map(l=>`<div><b>${l[0]}</b><small>${l[1]}</small></div>`).join("")}<div><b>${s.pts.toLocaleString()}</b><small>${s.record?"new best":"points"}</small></div></div>
+      <div class="xpgain">+${s.xp} XP${s.rank?` · New rank: <b>${esc(s.rank)}</b>`:""}</div>
+      <p class="small" style="margin:8px 0 0">${s.hint}</p></div>
+      ${s.miss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.miss.map(c=>`<div class="gmiss"><div><b>${esc(c[1])}</b> ${sayBtn(c[1])}</div><div class="en2">${esc(c[2])}</div>${exBlock(c,true)}</div>`).join("")}</div>`:""}
+      <div class="ans"><button class="btn p" data-gs="${nextSet?G.set+1:(G.set||0)}" type="button">${nextSet?"Next set":"Play again"}</button><button class="btn" id="gback" type="button">${s.blitz?"All games":"All sets"}</button></div>`;return}
+  const top=(lbl)=>`<div class="row between"><button class="linkbtn" id="gquit" type="button">Quit</button><span class="small">${lbl}</span><span class="small">${G.id==="blitz"?`<b id="bt">60s</b>`:G.id==="pairs"?`${G.slips} slip${G.slips===1?"":"s"}`:G.res.filter(r=>r.ok).length+" ✓"}</span></div>`;
+  const dots=()=>`<div class="gdots">${G.cs.map((_,i)=>{const r=G.res[i];return `<i class="${r?(r.ok?"ok":"bad"):i===G.q?"now":""}"></i>`}).join("")}</div>`;
+  if(G.id==="speed"){const c=G.cs[G.q];
+    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · ${G.q+1}/${G.cs.length}`)}<div class="gtrack"><i id="gbar" style="transform:scaleX(${G.pick===null?1:Math.max(0,1-G.res[G.res.length-1].ms/GLIMIT)})"></i></div>${dots()}
+    <div class="gword serif">${esc(c[1])}</div><div class="gopts">${G.opts.map((o,k)=>`<button class="gopt ${G.pick!==null?(o===c?"ok":k===G.pick?"bad":"dim"):""}" data-gk="${k}" type="button" ${G.pick!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${G.pick===-1?`<p class="small" style="text-align:center;color:var(--red)">Time's up</p>`:""}</div>`;return}
+  if(G.id==="context"){const c=G.cs[G.q],m=G.m;const ans=G.pick!==null;
+    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · ${G.q+1}/${G.cs.length}`)}${dots()}
+    <div class="panel csent"><p class="cfr">${ans?hl(EX[c[1]][0],c[1]):m.fr}</p><p class="cen">${esc(m.en)}</p>${ans?sayBtn(EX[c[1]][0],"Listen"):""}</div>
+    <div class="gopts two">${G.opts.map((o,k)=>`<button class="gopt ${ans?(o===c?"ok":k===G.pick?"bad":"dim"):""}" data-ck="${k}" type="button" ${ans?"disabled":""}>${esc(o[1])}</button>`).join("")}</div>
+    ${ans?`<p class="small" style="text-align:center;margin:12px 0 0"><b>${esc(c[1])}</b> = ${esc(c[2])}</p><button class="btn p wide" id="cnext" type="button" style="margin-top:12px">${G.q+1<G.cs.length?"Next":"See result"}</button>`:""}</div>`;
+    if(ans){const nb=$("cnext");if(nb)nb.focus({preventScroll:true})}return}
+  if(G.id==="pairs"){const cell=(side,arr)=>arr.map((c,i)=>{const gone=G.gone.has(c),sel=G.sel&&G.sel.side===side&&G.sel.c===c,bad=G.bad&&G.bad.includes(c);return `<button class="pcell ${side} ${gone?"gone":""} ${sel?"sel":""} ${bad?"bad shake":""}" data-p="${side}${i}" type="button" ${gone?"disabled":""}>${esc(side==="L"?c[1]:c[2])}</button>`}).join("");
+    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · board ${G.b+1}/${G.boards.length}`)}<div class="gtrack"><i style="transform:scaleX(${(G.b*G.boards[0].length+G.gone.size)/G.cs.length})"></i></div>
+    <p class="small" style="text-align:center;margin:4px 0 10px">Tap a French word, then its English</p><div class="pgrid"><div>${cell("L",G.L)}</div><div>${cell("R",G.R)}</div></div></div>`;return}
+  if(G.id==="blitz"){const q=G.cur,a=G.pick!==null,ok=a&&G.pick===q.truth;
+    z.innerHTML=`<div class="gplay">${top(`Score <b>${G.score}</b>`)}<div class="gtrack"><i id="gbar"></i></div>
+    <div class="bmult"><span class="${G.streak>=5?"hot":""}">×${bMult()}</span><small>${G.streak} in a row</small></div>
+    <div class="panel bcard ${a?(ok?"ok":"bad"):""}"><div class="gword serif" style="padding:8px 0 6px">${esc(q.c[1])}</div><div class="bsep">means</div><div class="bshown">${esc(q.shown[2])}</div>${a&&!ok?`<div class="small" style="margin-top:10px">${q.truth?"It was right.":`Right answer: <b>${esc(q.c[2])}</b>`}</div>`:""}</div>
+    <div class="bbtns"><button class="bno" data-b="0" type="button" aria-label="False">✕</button><button class="byes" data-b="1" type="button" aria-label="True">✓</button></div></div>`;
+    const el=$("gbar");if(el)el.style.transform=`scaleX(${Math.max(0,1-(performance.now()-G.t0)/60000)})`;return}}
+$("cardzone").addEventListener("pointerdown",e=>{if(!G||G.done)return;let b;
+  if((b=e.target.closest("[data-gk]"))&&G.pick===null){e.preventDefault();sAnswer(+b.dataset.gk)}
+  else if((b=e.target.closest("[data-b]"))){e.preventDefault();bAnswer(b.dataset.b==="1")}
+  else if((b=e.target.closest("[data-p]"))){e.preventDefault();pTap(b.dataset.p[0],+b.dataset.p.slice(1))}});
+$("cardzone").addEventListener("click",e=>{let b;
+  if(b=e.target.closest("[data-gh]")){haptic();GH=b.dataset.gh;renderGame();$("main").scrollTop=0;return}
+  if(b=e.target.closest("[data-gs]")){haptic();gStart(GH||G&&G.id,+b.dataset.gs);$("main").scrollTop=0;return}
+  if(b=e.target.closest("[data-ck]")){cAnswer(+b.dataset.ck);return}
+  if(e.target.closest("#cnext")){cNext();return}
+  if(e.target.closest("#ghome")){GH=null;renderGame();return}
+  if(e.target.closest("#gquit")||e.target.closest("#gback")){if(G)GH=G.id;gQuit();if(GH==="blitz"&&e.target.closest("#gback"))GH=null;renderGame();return}});
+window.addEventListener("keydown",e=>{if(!G||G.done||curView!=="cards"||mode!=="game")return;if(G.id==="blitz"&&(e.key==="ArrowLeft"||e.key==="ArrowRight")){bAnswer(e.key==="ArrowRight")}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.done){const id=G.id;gQuit();GH=id;if(curView==="cards"&&mode==="game")renderGame()}});
 
 /* ---------- grammar ---------- */
 let dr=null,lastRule=-1,rq="";

@@ -30,6 +30,14 @@ WORDS THAT COST MARKS
 • Spaced repetition brings each word back just before you'd forget it
 • Weak-words deck and a multiple-choice mode for quick sessions
 
+GAMES THAT LEVEL UP
+• Speed: four answers, 8 seconds a word, stars for speed
+• Pairs: match French and English against the clock
+• In context: fill the gap in a real French sentence
+• True or false: 60-second blitz with streak multipliers
+• 68 sets per game: master one to unlock the next. Earn XP and climb seven ranks from Rookie to Master translator
+• Every word you miss goes back into your reviews
+
 GRAMMAR TRAPS
 • 49 English errors French speakers make, as one-tap drills: depuis + present, faire faire, "the" with general ideas, "or" as a connector, contract "shall", dates, numbers and money formats
 • Searchable rule list with the wrong and right version side by side
