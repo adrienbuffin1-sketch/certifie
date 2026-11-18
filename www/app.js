@@ -1,6 +1,6 @@
 (function(){
 "use strict";
-const {CARDS,RULES,FORMATS,PASSAGES,REVS}=window.NAATI_DATA;const QUICK=window.NAATI_DATA.QUICK||[];
+const {CARDS,RULES,FORMATS,PASSAGES,REVS}=window.NAATI_DATA;const QUICK=window.NAATI_DATA.QUICK||[];const EX=window.NAATI_EX||{};const NEWS=window.NAATI_NEWS||[];
 const VERSION="1.0";
 const CAP=window.Capacitor;const NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
 const P=n=>NATIVE&&CAP.Plugins?CAP.Plugins[n]:null;
@@ -9,7 +9,7 @@ if(NATIVE)document.documentElement.classList.add("native");
 const TASKS=[
   ["cards","20 flashcards","Words · reviews first, then new words"],
   ["drill","5 grammar drills","Grammar"],
-  ["read","Read one French news story, then its English version","France 24 publishes both. Note 3 phrases they put better than you would."],
+  ["read","Read one news story","Read tab · translate a paragraph in your head, then check. Save 2 terms to your cards."],
   ["write","One 10-minute translation","Practice · a full 1-hour passage 2–3 times a week"]
 ];
 const STEPS=[
@@ -28,13 +28,24 @@ const today=()=>new Date().toLocaleDateString("en-CA");
 const addDays=(d,n)=>{const x=new Date(d+"T12:00:00");x.setDate(x.getDate()+n);return x.toLocaleDateString("en-CA")};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id);
+const CANSAY="speechSynthesis" in window;
+function say(t){if(!CANSAY)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="fr-FR";u.rate=.92;const v=speechSynthesis.getVoices().find(x=>/^fr(-|_)FR/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11"/></svg>';
+const sayBtn=(t,lbl)=>CANSAY?`<button type="button" class="say" data-say="${esc(t)}" aria-label="${lbl||"Listen"}">${SPK}</button>`:"";
+function hl(sent,word){const w=word.replace(/^(le |la |les |l'|l’|un |une |des |se |s'|s’)/i,"").replace(/\s*\(.*?\)\s*/g," ").trim();const e=esc(sent);if(!w)return e;
+  const tries=[w,w.split(/[ \/]/)[0]];for(const t of tries){if(t.length<3)continue;const stem=t.length>6?t.slice(0,t.length-2):t;const i=sent.toLowerCase().indexOf(stem.toLowerCase());if(i>=0){let j=i+stem.length;while(j<sent.length&&/[\p{L}'’-]/u.test(sent[j]))j++;return esc(sent.slice(0,i))+"<mark>"+esc(sent.slice(i,j))+"</mark>"+esc(sent.slice(j))}}return e}
+function exBlock(c,full){const x=EX[c[1]];if(!x)return "";return `<div class="ex"><div class="exfr">${sayBtn(x[0],"Listen to the example")}<span>${hl(x[0],c[1])}</span></div>${full?`<div class="exen">${esc(x[1])}</div>`:""}</div>`}
+document.addEventListener("click",e=>{const b=e.target.closest(".say");if(b){e.preventDefault();say(b.dataset.say)}});
 
 /* ---------- state ---------- */
-const BASE=()=>({box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0});
+const BASE=()=>({box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0,mine:[],nread:{},ndraft:{}});
 let S=BASE();
 function load(raw){try{const x=typeof raw==="string"?JSON.parse(raw):raw;if(x&&typeof x==="object"){const b=BASE();S=Object.assign(b,x);S.set=Object.assign(b.set,x.set||{});return true}}catch(e){}return false}
 try{load(localStorage.getItem(KEY))}catch(e){}
 const bootFresh=!S.ts;
+const MYDECK="My words";
+function syncMine(){(S.mine||[]).forEach(m=>{if(!CARDS.some(c=>c[0]===MYDECK&&c[1]===m.fr))CARDS.push([MYDECK,m.fr,m.en,m.src?"From: "+m.src:""]);if(m.ex&&!EX[m.fr])EX[m.fr]=m.ex})}
+syncMine();
 let saveT=null;
 const save=()=>{S.ts=Date.now();const raw=JSON.stringify(S);try{localStorage.setItem(KEY,raw)}catch(e){}
   const pref=P("Preferences");if(pref){clearTimeout(saveT);saveT=setTimeout(()=>pref.set({key:KEY,value:raw}).catch(()=>{}),300)}
@@ -60,7 +71,7 @@ function applyTheme(){const t=S.set.theme;const dark=t==="dark"||(t==="auto"&&mq
 mq.addEventListener?mq.addEventListener("change",applyTheme):mq.addListener(applyTheme);
 
 /* ---------- tabs ---------- */
-const TABS=[["today","Today",'<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.6 2.6 4.8-5.2"/>'],["cards","Words",'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M7.5 10h9M7.5 14h5.5"/>'],["grammar","Grammar",'<path d="M4.5 19l5-14 5 14M6.8 13.5h5.4M16 9.5l3.5 3-3.5 3"/>'],["practice","Practice",'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7M10 3h4"/>'],["test","Test",'<path d="M6.5 3.5h11v17l-5.5-3.4-5.5 3.4z"/>']];
+const TABS=[["today","Today",'<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.6 2.6 4.8-5.2"/>'],["cards","Words",'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M7.5 10h9M7.5 14h5.5"/>'],["grammar","Grammar",'<path d="M4.5 19l5-14 5 14M6.8 13.5h5.4M16 9.5l3.5 3-3.5 3"/>'],["read","Read",'<path d="M4 5.5h6.5a2 2 0 012 2V19a2 2 0 00-2-2H4zM20 5.5h-6.5a2 2 0 00-2 2V19a2 2 0 012-2H20z"/>'],["practice","Practice",'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7M10 3h4"/>'],["test","Test",'<path d="M6.5 3.5h11v17l-5.5-3.4-5.5 3.4z"/>']];
 $("tabs").innerHTML=TABS.map(t=>`<button data-v="${t[0]}" aria-label="${t[1]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg>${t[1]}</button>`).join("");
 let curView="today";
 function show(v){if(!TABS.some(t=>t[0]===v))v="today";curView=v;document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
@@ -122,15 +133,15 @@ $("decks").addEventListener("keydown",e=>{const r=e.target.closest(".deck");if(r
 $("tasks").addEventListener("change",e=>{const t=e.target.dataset.t;if(!t)return;const d=T();S.done[d][t]=e.target.checked;save();haptic(e.target.checked?"ok":"");if(e.target.checked&&dayComplete(d)){burst();haptic("win");toast("Day complete. Streak +1")}renderToday()});
 
 /* ---------- cards ---------- */
-const CATS=["All","Weak words",...new Set(CARDS.map(c=>c[0]))];let cat="All",mode="cards",cur=null,quiz=null,chk=null,extra=false;
+let CATS=[];const mkCats=()=>{CATS=["All","Weak words",...new Set(CARDS.map(c=>c[0]))]};mkCats();let cat="All",mode="cards",cur=null,quiz=null,chk=null,extra=false,hint=false;
 const pool=()=>CARDS.filter(c=>cat==="All"||(cat==="Weak words"?isWeak(c):c[0]===cat));
 const newLeft=()=>{const d=T();return Math.max(0,(+S.set.newday||20)-(S.counts[d].newc||0))};
 function queue(){const p=pool();const due=p.filter(isDue);if(due.length)return due;const nw=p.filter(isNew);if(nw.length&&newLeft()>0)return nw;return []}
-function pickCard(){const q=queue();const prev=cur;let c=q.length?q[Math.floor(Math.random()*q.length)]:null;if(c===prev&&q.length>1)c=q.find(x=>x!==prev);cur=c;extra=false}
-function practiceCard(){const p=pool();cur=p.length?p[Math.floor(Math.random()*p.length)]:null;extra=true}
+function pickCard(){const q=queue();const prev=cur;let c=q.length?q[Math.floor(Math.random()*q.length)]:null;if(c===prev&&q.length>1)c=q.find(x=>x!==prev);cur=c;extra=false;hint=false}
+function practiceCard(){const p=pool();cur=p.length?p[Math.floor(Math.random()*p.length)]:null;extra=true;hint=false}
 function record(ok){const k=idOf(cur);const wasNew=isNew(cur);let b=S.box[k]||0;b=ok?Math.min(b+1,5):0;S.box[k]=b;S.next[k]=addDays(today(),ok?(BOXDAYS[b]||1):0);const d=T();S.counts[d].cards++;if(wasNew)S.counts[d].newc=(S.counts[d].newc||0)+1;
   if(S.counts[d].cards===20&&!S.done[d].cards){S.done[d].cards=true;setTimeout(()=>{burst();haptic("win");toast("20 cards done for today")},150)}save()}
-function renderCards(){
+function renderCards(){syncMine();if(CATS.length!==2+new Set(CARDS.map(c=>c[0])).size)mkCats();
   $("cats").innerHTML=CATS.map(c=>{const n=c==="Weak words"?CARDS.filter(isWeak).length:c==="All"?null:CARDS.filter(x=>x[0]===c&&isDue(x)).length;return `<button class="chip" data-c="${esc(c)}" aria-pressed="${c===cat}">${esc(c)}${n?`<span class="n">${n}</span>`:""}</button>`}).join("");
   const p=pool();const due=p.filter(isDue).length;const nw=p.filter(isNew).length;const learnt=p.filter(c=>(S.box[idOf(c)]||0)>=3).length;
   $("due").innerHTML=`<div class="stat"><span><b>${due}</b> to review</span><span><b>${Math.min(nw,newLeft())}</b> new today</span><span><b>${learnt}</b>/${p.length} known</span></div><div class="bar"><i style="width:${p.length?learnt/p.length*100:0}%"></i></div>`;
@@ -140,7 +151,7 @@ function renderCards(){
   if(!cur&&!chk)pickCard();
   if(!cur){$("cardzone").innerHTML=`<div class="panel empty"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" fill="none" stroke="var(--green)" stroke-width="3"/><path d="M20 33l8 8 16-17" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><h3 style="justify-content:center;margin:0 0 6px">${p.length?"All caught up":"Nothing here yet"}</h3><p class="small" style="margin:0 0 16px">${cat==="Weak words"?"Words you miss land here.":p.length?"Your next reviews come back tomorrow. Extra practice doesn't change your schedule.":""}</p>${p.length?`<button class="btn p" id="extra">Extra practice</button>`:""}</div>`;return}
   const res=chk;
-  $("cardzone").innerHTML=`<form id="ansform" autocomplete="off"><div class="flash ${res?(res.ok?"ok":"bad"):""}" id="flash"><span class="tag"><span>${esc(cur[0])}</span>${extra?"<span>practice</span>":isNew(cur)?'<span class="new">NEW</span>':""}</span><div class="hw">${esc(cur[1])}</div>${res?`<div class="verdict ${res.ok?"ok":"bad"}">${res.ok?(res.typo?"Right · small typo":"Correct"):"Not quite"}</div>${res.typed?`<div class="yours">You wrote: <span class="${res.ok?"r":"w"}">${esc(res.typed)}</span></div>`:""}<div class="en">${esc(cur[2])}</div>${cur[3]?`<div class="note">${esc(cur[3])}</div>`:""}`:`<input id="answer" class="inline" type="text" placeholder="Type the English" aria-label="Your English answer" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go">`}</div>
+  $("cardzone").innerHTML=`<form id="ansform" autocomplete="off"><div class="flash ${res?(res.ok?"ok":"bad"):""}" id="flash"><span class="tag"><span>${esc(cur[0])}</span>${extra?"<span>practice</span>":isNew(cur)?'<span class="new">NEW</span>':""}</span><div class="hwrow"><div class="hw">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${res?`<div class="verdict ${res.ok?"ok":"bad"}">${res.ok?(res.typo?"Right · small typo":"Correct"):"Not quite"}</div>${res.typed?`<div class="yours">You wrote: <span class="${res.ok?"r":"w"}">${esc(res.typed)}</span></div>`:""}<div class="en">${esc(cur[2])}</div>${cur[3]?`<div class="note">${esc(cur[3])}</div>`:""}${exBlock(cur,true)}`:`${hint?exBlock(cur,false):EX[cur[1]]?`<button type="button" class="linkbtn exbtn" id="exhint">See it in a sentence</button>`:""}<input id="answer" class="inline" type="text" placeholder="Type the English" aria-label="Your English answer" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go">`}</div>
   ${res&&!res.ok?retypeBlock(res):""}<div class="ans">${res?(!res.ok&&!res.fixed?`<button class="btn p" type="submit">Check</button><button class="btn" id="flipres" type="button">I was right</button>`:`<button class="btn p" id="next" type="submit">Next</button><button class="btn" id="flipres" type="button">${res.ok?"Count as wrong":"I was right"}</button>`):`<button class="btn p" type="submit">Check</button><button class="btn" id="skip" type="button">Show answer</button>`}</div><p class="kbhint">Tap an empty spot to close the keyboard and see the decks</p></form>`;
   const inp=$("answer")||$("retype");if(inp){inp.focus({preventScroll:true})}else{const nb=$("next");if(nb)nb.focus({preventScroll:true})}
 }
@@ -155,12 +166,13 @@ function tryRetype(r,val){const t=norm(val);const as=answers(cur[2]);const ok=!!
 function grade(ok){if(!extra)record(ok);else{const d=T();S.counts[d].cards++;save()}chk=null;if(extra)practiceCard();else pickCard();renderCards();updateBadge()}
 function newQuiz(){practiceCard();if(!cur)return;const same=CARDS.filter(c=>c!==cur&&c[0]===cur[0]&&c[2]!==cur[2]);const others=same.length>=3?same:CARDS.filter(c=>c!==cur&&c[2]!==cur[2]);const opts=[cur];let g=0;while(opts.length<4&&g++<200){const o=others[Math.floor(Math.random()*others.length)];if(!opts.some(x=>x[2]===o[2]))opts.push(o)}quiz={opts:opts.sort(()=>Math.random()-.5),ans:null}}
 function renderQuiz(){if(!quiz)newQuiz();if(!cur){$("cardzone").innerHTML=`<div class="panel empty"><b>No cards here yet.</b></div>`;return}
-  $("cardzone").innerHTML=`<div class="panel"><div class="eyebrow">${esc(cur[0])}</div><div class="hw" style="font-size:32px;margin:8px 0 4px">${esc(cur[1])}</div><div class="small">Choose the best English</div><div class="opts">${quiz.opts.map((o,i)=>`<button class="opt ${quiz.ans!==null?(o===cur?"ok":i===quiz.ans?"bad":""):""}" data-i="${i}" ${quiz.ans!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${quiz.ans!==null?`${cur[3]?`<p class="small" style="margin-top:12px">${esc(cur[3])}</p>`:""}${quiz.fix?retypeBlock(quiz.fix):""}${quiz.fix&&!quiz.fix.fixed?`<button class="btn p wide" id="qcheck" style="margin-top:12px">Check</button>`:`<button class="btn p wide" id="qnext" style="margin-top:12px">Next</button>`}`:""}</div>`;const r=$("retype");if(r)r.focus({preventScroll:true})}
+  $("cardzone").innerHTML=`<div class="panel"><div class="eyebrow">${esc(cur[0])}</div><div class="hwrow" style="justify-content:flex-start"><div class="hw" style="font-size:32px;margin:8px 0 4px">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${quiz.ans===null&&EX[cur[1]]?exBlock(cur,false):""}<div class="small">Choose the best English</div><div class="opts">${quiz.opts.map((o,i)=>`<button class="opt ${quiz.ans!==null?(o===cur?"ok":i===quiz.ans?"bad":""):""}" data-i="${i}" ${quiz.ans!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${quiz.ans!==null?`${cur[3]?`<p class="small" style="margin-top:12px">${esc(cur[3])}</p>`:""}${exBlock(cur,true)}${quiz.fix?retypeBlock(quiz.fix):""}${quiz.fix&&!quiz.fix.fixed?`<button class="btn p wide" id="qcheck" style="margin-top:12px">Check</button>`:`<button class="btn p wide" id="qnext" style="margin-top:12px">Next</button>`}`:""}</div>`;const r=$("retype");if(r)r.focus({preventScroll:true})}
 $("cardzone").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="retype"&&mode==="quiz"){e.preventDefault();$("qcheck")&&$("qcheck").click()}});
 $("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();cat=b.dataset.c;cur=null;quiz=null;chk=null;renderCards()});
 $("cmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();mode=b.dataset.m;cur=null;chk=null;quiz=null;renderCards()});
 $("cardzone").addEventListener("submit",e=>{e.preventDefault();if(chk&&!chk.ok&&!chk.fixed){const r=$("retype");if(r&&!r.value.trim()){r.focus();return}if(r)tryRetype(chk,r.value);renderCards();return}if(chk){grade(chk.ok);return}const a=$("answer");if(!a.value.trim()){a.focus();return}chk=check(a.value);haptic(chk.ok?"ok":"bad");renderCards()});
 $("cardzone").addEventListener("click",e=>{
+  if(e.target.id==="exhint"){hint=true;renderCards();const a=$("answer");if(a)a.focus({preventScroll:true});return}
   if(e.target.id==="skip"){chk={ok:false,typed:""};haptic("bad");renderCards();return}
   if(e.target.id==="skipretype"){if(mode==="quiz"&&quiz){quiz.fix.fixed=true;renderQuiz()}else if(chk){chk.fixed=true;renderCards()}return}
   if(e.target.id==="qcheck"){const r=$("retype");if(r)tryRetype(quiz.fix,r.value);renderQuiz();const n=$("retype");if(n)n.focus();return}
@@ -299,8 +311,58 @@ if(window.visualViewport&&!NATIVE)visualViewport.addEventListener("resize",()=>s
 
 /* tap anywhere that isn't a control to close the keyboard */
 $("main").addEventListener("pointerdown",e=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA/.test(a.tagName))return;if(e.target.closest("input,textarea,button,label,select,a,.opt,.chip,summary"))return;a.blur()});
+/* ---------- read: news stories + live headlines ---------- */
+const RD={tab:"stories",open:null,dom:"All",show:{},tr:{},live:null,liveErr:"",loading:false,ltr:{}};
+const FEEDS=[["France 24","https://www.france24.com/fr/rss","https://www.france24.com/en/"],["RFI","https://www.rfi.fr/fr/rss","https://www.rfi.fr/en/"]];
+const strip=h=>{const d=document.createElement("div");d.innerHTML=h||"";return (d.textContent||"").replace(/\s+/g," ").trim()};
+async function loadLive(){if(RD.loading)return;RD.loading=true;RD.liveErr="";renderRead();const out=[];
+  await Promise.all(FEEDS.map(async f=>{try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),9000);const r=await fetch(f[1],{signal:ctl.signal});clearTimeout(tm);const x=new DOMParser().parseFromString(await r.text(),"text/xml");
+    x.querySelectorAll("item").forEach((it,i)=>{if(i>=12)return;const g=t=>{const n=it.querySelector(t);return n?n.textContent:""};const t=strip(g("title"));if(!t)return;out.push({src:f[0],en:f[2],t,d:strip(g("description")).slice(0,320),l:g("link").trim(),ts:Date.parse(g("pubDate"))||0})})}catch(e){}}));
+  RD.loading=false;if(out.length){out.sort((a,b)=>b.ts-a.ts);RD.live=out}else RD.liveErr=NATIVE?"Couldn't reach the news feeds. Check your connection and try again.":"Live headlines load in the iPhone app. The browser preview blocks the feeds.";renderRead()}
+function termAdded(fr){return (S.mine||[]).some(m=>m.fr===fr)||CARDS.some(c=>c[1]===fr)}
+function addTerm(st,t){if(termAdded(t[0]))return;const sents=x=>x.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[x];let ex=null;const w=t[0].replace(/\(.*?\)/g,"").split(/[\s'’-]+/).sort((p,q)=>q.length-p.length)[0]||t[0];const stem=w.slice(0,Math.max(4,w.length-2)).toLowerCase();
+  st.p.some(pp=>{const fs=sents(pp[0]).map(z=>z.trim()),es=sents(pp[1]).map(z=>z.trim());const i=fs.findIndex(z=>z.toLowerCase().includes(stem));if(i<0)return false;ex=[fs[i],fs.length===es.length?es[i]:pp[1]];return true});
+  S.mine=S.mine||[];S.mine.push({fr:t[0],en:t[1],src:st.t,ex:ex||undefined});syncMine();save();updateBadge()}
+function renderRead(){const z=$("readzone");if(!z)return;document.querySelectorAll("#rtab button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r===RD.tab));
+  const head=$("readhead");if(head)head.style.display=RD.open?"none":"";
+  if(RD.open){const st=NEWS.find(n=>n.id===RD.open);const allShown=st.p.every((_,i)=>RD.show[st.id+":"+i]);
+    z.innerHTML=`<button class="back" id="rback" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All stories</button>
+    <article class="story"><div class="eyebrow">${esc(st.dom)}</div><div class="hwrow" style="justify-content:flex-start;align-items:flex-start"><h2 class="stt">${esc(st.t)}</h2>${sayBtn(st.t)}</div>${allShown?`<p class="ste">${esc(st.te)}</p>`:""}
+    ${st.p.map((pp,i)=>{const k=st.id+":"+i,on=RD.show[k],tr=RD.tr[k],dk=k;return `<div class="para ${on?"on":""}"><p class="pfr">${esc(pp[0])}</p>
+      ${tr?`<textarea class="ptr" data-d="${dk}" rows="4" placeholder="Your English version" aria-label="Your translation of paragraph ${i+1}">${esc(S.ndraft[dk]||"")}</textarea>`:""}
+      ${on?`<p class="pen">${esc(pp[1])}</p>`:""}
+      <div class="pact">${sayBtn(pp[0],"Listen to the paragraph")}${tr?"":`<button type="button" class="rb" data-tr="${k}">Translate it</button>`}<button type="button" class="rb ${on?"":"p"}" data-show="${k}">${on?"Hide English":"Show English"}</button></div></div>`}).join("")}
+    </article>
+    <div class="panel"><h3 style="margin-bottom:4px">Key terms</h3><p class="small" style="margin:0 0 10px">Add them to your cards. The sentence from this story becomes the example.</p>
+    ${st.terms.map((t,i)=>{const a=termAdded(t[0]);return `<div class="term"><div><b>${esc(t[0])}</b><span>${esc(t[1])}</span></div><button type="button" class="rb ${a?"done":"p"}" data-add="${i}" ${a?"disabled":""}>${a?"Added":"+ Cards"}</button></div>`}).join("")}
+    ${st.terms.some(t=>!termAdded(t[0]))?`<button type="button" class="linkbtn" id="addall" style="margin-top:10px">Add all</button>`:""}</div>
+    <button class="btn p wide" id="rdone" type="button">${S.nread[st.id]?"Read · back to stories":"Done reading"}</button>`;return}
+  if(RD.tab==="live"){if(!RD.live&&!RD.liveErr&&!RD.loading){loadLive();return}
+    z.innerHTML=`<p class="small" style="margin:0 0 12px">Today's French headlines. No model answer here: write your English, then open the article or check the English edition, which often runs the same story.</p>
+    ${RD.loading?`<div class="panel empty"><div class="spin"></div><p class="small">Fetching headlines…</p></div>`:RD.liveErr?`<div class="panel empty"><p class="small" style="margin:0 0 12px">${esc(RD.liveErr)}</p>${NATIVE?`<button class="btn p" id="lretry">Try again</button>`:""}</div>`:
+    RD.live.map((it,i)=>`<div class="panel live"><div class="row between"><span class="eyebrow">${esc(it.src)}${it.ts?" · "+new Date(it.ts).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}):""}</span>${sayBtn(it.t+". "+it.d)}</div><b class="serif lt">${esc(it.t)}</b>${it.d?`<p class="ld">${esc(it.d)}</p>`:""}
+      ${RD.ltr[i]!==undefined?`<textarea class="ltr" data-i="${i}" rows="3" placeholder="Your English headline and summary" aria-label="Your translation">${esc(RD.ltr[i])}</textarea>`:""}
+      <div class="pact">${RD.ltr[i]===undefined?`<button type="button" class="rb p" data-ltr="${i}">Translate it</button>`:""}${it.l?`<a class="rb" href="${esc(it.l)}" target="_blank" rel="noopener">Article</a>`:""}<a class="rb" href="${esc(it.en)}" target="_blank" rel="noopener">English edition</a></div></div>`).join("")+`<button class="btn wide" id="lretry" type="button">Refresh</button>`}`;return}
+  const doms=["All",...new Set(NEWS.map(n=>n.dom))];const list=NEWS.filter(n=>RD.dom==="All"||n.dom===RD.dom);const done=NEWS.filter(n=>S.nread[n.id]).length;
+  z.innerHTML=`<div class="chips" id="rdoms">${doms.map(d=>`<button class="chip" data-dom="${esc(d)}" aria-pressed="${d===RD.dom}">${esc(d)}</button>`).join("")}</div>
+  <div class="stat"><span><b>${done}</b>/${NEWS.length} read</span><span><b>${(S.mine||[]).length}</b> terms saved</span></div>
+  <div class="stories">${list.map(n=>`<button class="srow ${S.nread[n.id]?"read":""}" data-open="${n.id}" type="button"><span class="eyebrow">${esc(n.dom)}${S.nread[n.id]?' · <span class="ok">read</span>':""}</span><b class="serif">${esc(n.t)}</b><small>${n.p.length} paragraphs · ${n.terms.length} key terms</small></button>`).join("")}</div>`}
+$("v-read").addEventListener("click",e=>{const t=e.target;let b;
+  if(b=t.closest("#rtab button")){haptic();RD.tab=b.dataset.r;RD.open=null;renderRead();return}
+  if(b=t.closest("[data-dom]")){haptic();RD.dom=b.dataset.dom;renderRead();return}
+  if(b=t.closest("[data-open]")){haptic();RD.open=b.dataset.open;renderRead();$("main").scrollTop=0;return}
+  if(t.closest("#rback")){RD.open=null;renderRead();$("main").scrollTop=0;return}
+  if(b=t.closest("[data-show]")){const k=b.dataset.show;RD.show[k]=!RD.show[k];haptic();renderRead();return}
+  if(b=t.closest("[data-tr]")){RD.tr[b.dataset.tr]=true;renderRead();const a=document.querySelector(`.ptr[data-d="${b.dataset.tr}"]`);if(a)a.focus();return}
+  if(b=t.closest("[data-add]")){const st=NEWS.find(n=>n.id===RD.open);addTerm(st,st.terms[+b.dataset.add]);haptic("ok");toast("Added to My words");renderRead();return}
+  if(t.closest("#addall")){const st=NEWS.find(n=>n.id===RD.open);st.terms.forEach(x=>addTerm(st,x));haptic("ok");toast("Added to My words");renderRead();return}
+  if(t.closest("#rdone")){const st=RD.open;const first=!S.nread[st];S.nread[st]=today();const d=T();const was=S.done[d].read;S.done[d].read=true;save();RD.open=null;renderRead();$("main").scrollTop=0;if(first&&!was){haptic("win");toast(dayComplete(d)?"Day complete. Streak +1":"Reading done for today");if(dayComplete(d))burst()}return}
+  if(t.closest("#lretry")){RD.live=null;RD.liveErr="";loadLive();return}
+  if(b=t.closest("[data-ltr]")){RD.ltr[+b.dataset.ltr]="";renderRead();const a=document.querySelector(`.ltr[data-i="${b.dataset.ltr}"]`);if(a)a.focus();return}});
+$("v-read").addEventListener("input",e=>{const t=e.target;if(t.classList.contains("ptr")){S.ndraft[t.dataset.d]=t.value;save()}else if(t.classList.contains("ltr"))RD.ltr[+t.dataset.i]=t.value});
+
 /* ---------- boot ---------- */
-function render(v){if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar")renderGrammar();if(v==="practice")renderPractice();if(v==="test")renderSteps();updateBadge()}
+function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar")renderGrammar();if(v==="practice")renderPractice();if(v==="test")renderSteps();updateBadge()}
 applyTheme();
 show(location.hash.slice(1)||"today");
 maybeOnboard();

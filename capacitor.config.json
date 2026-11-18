@@ -1,6 +1,6 @@
 {
   "appId": "com.certifie.app",
-  "appName": "Certifi\u00e9",
+  "appName": "Certifié",
   "webDir": "www",
   "ios": {
     "contentInset": "never",
@@ -25,6 +25,9 @@
     "Keyboard": {
       "resize": "native",
       "resizeOnFullScreen": true
+    },
+    "CapacitorHttp": {
+      "enabled": true
     }
   }
 }

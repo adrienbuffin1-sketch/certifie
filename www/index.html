@@ -56,7 +56,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 3
 
 /* tab bar */
 nav{background:var(--paper);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);position:relative;z-index:3}
-nav .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+nav .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
 nav button{background:none;border:0;color:var(--mute);font:600 11.5px Inst,sans-serif;letter-spacing:.01em;padding:8px 2px 9px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
 nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7}
 nav button[aria-current=true]{color:var(--blue)}
@@ -286,6 +286,46 @@ html.kb main{padding-top:10px}
 html.kb .kbhint{display:block;text-align:center;font-size:12.5px;color:var(--mute);margin:10px 0 0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(prefers-reduced-motion:no-preference){.xp i,.sb i,.bar i{transition:width .6s ease}}
+
+/* examples, speech, reader */
+.hwrow{display:flex;align-items:center;justify-content:center;gap:6px}
+.say{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--blue);display:inline-grid;place-items:center;cursor:pointer;padding:0}
+.say svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.say:active{transform:scale(.94)}
+.ex{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--soft);text-align:left;width:100%;max-width:520px}
+.exfr{display:flex;gap:10px;align-items:flex-start;font:500 16px/1.45 News,Georgia,serif}
+.exfr .say{width:30px;height:30px}.exfr .say svg{width:15px;height:15px}
+.ex mark{background:var(--gold-soft);color:inherit;border-radius:4px;padding:0 2px}
+.exen{margin:6px 0 0 40px;font-size:14px;color:var(--mute);line-height:1.45}
+.exbtn{margin:0 0 10px}
+nav button{font-size:11px}
+#readhead .seg{margin-bottom:12px}
+.stories{display:grid;gap:10px}
+.srow{text-align:left;display:grid;gap:5px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+.srow b{font-size:19px;line-height:1.2}
+.srow small{color:var(--mute);font-size:12.5px}
+.srow.read{opacity:.72}
+.srow .ok{color:var(--green)}
+.back{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--blue);font:600 15px Inst,sans-serif;padding:6px 0 12px;cursor:pointer;min-height:40px}
+.back svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.story{margin-bottom:14px}
+.stt{font-size:27px;line-height:1.15;margin:6px 0 4px;flex:1}
+.ste{color:var(--mute);margin:2px 0 6px;font-style:italic}
+.para{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:18px 0}
+.para.on{border-left-color:var(--blue)}
+.pfr{font:500 18px/1.55 News,Georgia,serif;margin:0}
+.pen{margin:10px 0 0;font-size:15.5px;line-height:1.55;color:var(--ink);background:var(--soft2);border-radius:12px;padding:10px 12px}
+.ptr,.ltr{width:100%;margin-top:10px;font:15px/1.5 Inst,sans-serif;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);resize:vertical}
+.pact{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.rb{font:600 13.5px Inst,sans-serif;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:36px;text-decoration:none;display:inline-flex;align-items:center}
+.rb.p{background:var(--blue);color:var(--blue-ink);border-color:var(--blue)}
+.rb.done{color:var(--green);background:transparent}
+.term{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.term b{display:block;font-size:15.5px}.term span{font-size:13.5px;color:var(--mute)}
+.live .lt{display:block;font-size:19px;line-height:1.25;margin:6px 0 4px}
+.ld{margin:0;font-size:14.5px;line-height:1.5;color:var(--mute)}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--blue);animation:sp 0.8s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -342,6 +382,13 @@ html.kb .kbhint{display:block;text-align:center;font-size:12.5px;color:var(--mut
   <h3>All rules <small id="rulecount"></small></h3>
   <input class="search" id="rulesearch" type="search" placeholder="Search rules" aria-label="Search rules">
   <div class="panel" id="rules"></div>
+</section>
+
+<section class="view" id="v-read">
+  <div id="readhead"><h2>Read the news</h2>
+  <p class="sub">French stories from every area NAATI tests. Translate in your head, then check the English.</p>
+  <div class="seg" id="rtab"><button data-r="stories" aria-pressed="true">Stories</button><button data-r="live" aria-pressed="false">Live headlines</button></div></div>
+  <div id="readzone"></div>
 </section>
 
 <section class="view" id="v-practice">
@@ -425,6 +472,11 @@ html.kb .kbhint{display:block;text-align:center;font-size:12.5px;color:var(--mut
 
 <script src="data.js"></script>
 <script src="data2.js"></script>
+<script src="examples1.js"></script>
+<script src="examples2.js"></script>
+<script src="examples3.js"></script>
+<script src="examples4.js"></script>
+<script src="news.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
