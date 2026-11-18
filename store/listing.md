@@ -25,6 +25,7 @@ Every part of the app targets the places candidates lose marks.
 WORDS THAT COST MARKS
 • 650+ cards: false friends (actuellement, éventuellement, important…), civil status, migration, education, work, tax, housing, building, insurance, legal, police, health, government, contracts, manuals and business letters
 • Type the English, not just flip: answers are checked, small typos forgiven
+• Every word comes with a French example sentence and its English translation, plus audio
 • Miss a word and you write it correctly once to lock it in
 • Spaced repetition brings each word back just before you'd forget it
 • Weak-words deck and a multiple-choice mode for quick sessions
@@ -32,6 +33,12 @@ WORDS THAT COST MARKS
 GRAMMAR TRAPS
 • 49 English errors French speakers make, as one-tap drills: depuis + present, faire faire, "the" with general ideas, "or" as a connector, contract "shall", dates, numbers and money formats
 • Searchable rule list with the wrong and right version side by side
+
+READ THE NEWS
+• 16 French news stories across the areas the test draws on: health, courts, immigration, work, housing, banking, insurance, schools, environment, tech, transport, farming, tourism, social services, police and business
+• Read a paragraph, translate it yourself, then reveal the English
+• Save each story's key terms straight into your cards, with the sentence from the story as the example
+• Live headlines from France 24 and RFI to translate, with links to the full article and the English edition
 
 TIMED TRANSLATIONS
 • 12 ten-minute texts (~60 words) for a daily drill: parcel notices, school notes, pharmacy labels, insurance claims, job ads, contracts
@@ -45,7 +52,7 @@ REVISION TASK TRAINER
 • Rewrite mode to practise writing the corrections
 
 STAY ON TRACK
-• Today plan: 20 cards, 5 drills, one French news story read in both languages, a 10-minute translation
+• Today plan: 20 cards, 5 drills, one news story, a 10-minute translation
 • Streaks, levels from Beginner to Certified level, a knowledge map of every deck and a countdown to your test date
 • Optional daily reminder
 • Test facts, a formats cheat sheet and a checklist of the steps to booking your test
