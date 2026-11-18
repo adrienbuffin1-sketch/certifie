@@ -41,7 +41,7 @@ workflows:
       - name: Add the iOS project
         script: npx cap add ios
       - name: App icon and splash screen
-        script: npx @capacitor/assets generate --ios --iconBackgroundColor '#16204a' --splashBackgroundColor '#16204a' --splashBackgroundColorDark '#16204a'
+        script: npx @capacitor/assets generate --ios --iconBackgroundColor '#5f1730' --splashBackgroundColor '#5f1730' --splashBackgroundColorDark '#3d0f1f'
       - name: Copy the app in
         script: npx cap sync ios
       - name: iPhone only, portrait, name, no export compliance questions

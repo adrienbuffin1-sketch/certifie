@@ -28,6 +28,37 @@ const today=()=>new Date().toLocaleDateString("en-CA");
 const addDays=(d,n)=>{const x=new Date(d+"T12:00:00");x.setDate(x.getDate()+n);return x.toLocaleDateString("en-CA")};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=id=>document.getElementById(id);
+
+const DI={
+ "False friends":'<path d="M4.5 9h15M4.5 15h15M15.5 4.5l-7 15"/>',
+ "Civil status & ID":'<rect x="3" y="5.5" width="18" height="13" rx="2.25"/><circle cx="8.5" cy="11" r="2"/><path d="M5.75 15.5c.6-1.3 1.6-2 2.75-2s2.15.7 2.75 2M13.75 10h4.5M13.75 13.5h3"/>',
+ "Migration":'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.3 3.6 5.1 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.1-3.6-8.5S9.6 5.8 12 3.5z"/>',
+ "Education":'<path d="M2.75 9.25L12 5l9.25 4.25L12 13.5z"/><path d="M6.5 11v4.25c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3V11M21.25 9.25v5"/>',
+ "Work":'<rect x="3.25" y="7.5" width="17.5" height="12" rx="2.25"/><path d="M9 7.5V5.75A1.25 1.25 0 0110.25 4.5h3.5A1.25 1.25 0 0115 5.75V7.5M3.25 12.75h17.5"/>',
+ "Money & tax":'<rect x="2.75" y="6.5" width="18.5" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.75v4.5M18 9.75v4.5"/>',
+ "Housing":'<path d="M3.75 11L12 4.25 20.25 11"/><path d="M5.75 9.5v10.25h12.5V9.5M10 19.75v-5.25h4v5.25"/>',
+ "Building & trades":'<rect x="3.5" y="3.75" width="13.5" height="5.5" rx="1.5"/><path d="M17 6.5h2.25a1 1 0 011 1v3.25a1 1 0 01-1 1H11v2.75"/><rect x="9.5" y="14.5" width="3" height="6.25" rx="1"/>',
+ "Insurance":'<path d="M12 3.25l7.5 2.9v5.6c0 4.4-3.1 7.9-7.5 9.4-4.4-1.5-7.5-5-7.5-9.4v-5.6z"/><path d="M9 12l2.1 2.1L15.25 10"/>',
+ "Legal":'<path d="M12 4v15.5M7.5 19.5h9M5 7.5h14M12 4.25V7.5"/><path d="M5 7.5l-2.5 6a2.75 2.75 0 005 0zM19 7.5l-2.5 6a2.75 2.75 0 005 0z"/>',
+ "Police":'<path d="M12 2.75l2.55 5.2 5.7.8-4.12 4 1 5.65L12 15.75 6.87 18.4l1-5.65-4.12-4 5.7-.8z"/>',
+ "Health":'<path d="M9.5 3.75h5v5.75h5.75v5h-5.75v5.75h-5v-5.75H3.75v-5H9.5z"/>',
+ "Government":'<path d="M3.5 9L12 4.25 20.5 9z"/><path d="M5.75 9v8M10 9v8M14 9v8M18.25 9v8M3.25 20h17.5M4.25 17h15.5"/>',
+ "Driving":'<path d="M4 15.75v-3.5l2.1-5.25h11.8l2.1 5.25v3.5z"/><path d="M4 12.25h16"/><circle cx="7.75" cy="18" r="1.75"/><circle cx="16.25" cy="18" r="1.75"/>',
+ "Connectors":'<path d="M10 14l4-4"/><path d="M8.75 7.5l1.5-1.5a3.5 3.5 0 015 5l-1.5 1.5M15.25 16.5l-1.5 1.5a3.5 3.5 0 01-5-5l1.5-1.5"/>',
+ "Admin verbs":'<rect x="5" y="4" width="14" height="16.5" rx="2.25"/><path d="M9.25 2.75h5.5v2.5h-5.5zM8.5 10h7M8.5 13.5h7M8.5 17h4"/>',
+ "Contracts":'<path d="M6 3.25h8.25l4 4V20.75H6z"/><path d="M14 3.25v4.25h4.25M8.5 12h7M8.5 17c1.2-1.9 2.3.9 3.5-.7s1.9.8 3.3.2"/>',
+ "Manuals & products":'<path d="M3.75 7.75L12 3.75l8.25 4v8.5L12 20.25l-8.25-4z"/><path d="M3.75 7.75L12 11.75l8.25-4M12 11.75v8.5"/>',
+ "Business letters":'<rect x="3" y="5.75" width="18" height="12.5" rx="2.25"/><path d="M3.75 7l8.25 6.25L20.25 7"/>',
+ "My words":'<path d="M6.5 3.75h11v16.5L12 16.5l-5.5 3.75z"/>',
+ "Weak words":'<circle cx="12" cy="12" r="8.25"/><circle cx="12" cy="12" r="4.25"/><circle cx="12" cy="12" r=".9"/>',
+ "Environment":'<path d="M5 19c0-8 5-13.5 14.5-14.25C19.25 14 14 19 5 19z"/><path d="M5 19c3-4 6-6.5 9.5-8"/>',
+ "Technology":'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3"/>',
+ "Agriculture":'<path d="M12 20.75V9.5"/><path d="M12 9.5c0-2.6 1.6-4.6 4-5.25.1 2.6-1.5 4.6-4 5.25zM12 9.5c0-2.6-1.6-4.6-4-5.25-.1 2.6 1.5 4.6 4 5.25zM12 14.5c0-2.6 1.6-4.6 4-5.25.1 2.6-1.5 4.6-4 5.25zM12 14.5c0-2.6-1.6-4.6-4-5.25-.1 2.6 1.5 4.6 4 5.25z"/>',
+ "Tourism":'<circle cx="12" cy="12" r="3.75"/><path d="M12 3v2.25M12 18.75V21M3 12h2.25M18.75 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/>',
+ "Social services":'<path d="M12 19.5s-7.5-4.4-7.5-9.75A4.25 4.25 0 0112 7.1a4.25 4.25 0 017.5 2.65C19.5 15.1 12 19.5 12 19.5z"/>'
+};
+const DALIAS={Immigration:"Migration",Employment:"Work",Banking:"Money & tax",Transport:"Driving",Business:"Business letters"};
+const di=k=>{const p=DI[k]||DI[DALIAS[k]];return p?`<svg class="di" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`:""};
 const CANSAY="speechSynthesis" in window;
 function say(t){if(!CANSAY)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="fr-FR";u.rate=.92;const v=speechSynthesis.getVoices().find(x=>/^fr(-|_)FR/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
 const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11"/></svg>';
@@ -61,18 +92,23 @@ const T=()=>{const d=today();S.counts[d]=S.counts[d]||{cards:0,drill:0,newc:0};S
 function haptic(kind){if(!S.set.haptic)return;const h=P("Haptics");if(h){if(kind==="ok")h.impact({style:"LIGHT"}).catch(()=>{});else if(kind==="bad")h.notification({type:"WARNING"}).catch(()=>{});else if(kind==="win")h.notification({type:"SUCCESS"}).catch(()=>{});else h.selectionChanged&&h.selectionChanged().catch(()=>{})}}
 let toastT;function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2200)}
 function burst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const c=$("burst"),x=c.getContext("2d");const W=c.width=innerWidth*devicePixelRatio,H=c.height=innerHeight*devicePixelRatio;
-  const cols=["#f0b34c","#2340c8","#1d7a52","#8ea4ff","#ffffff"];const ps=Array.from({length:90},()=>({x:W/2,y:H*.42,vx:(Math.random()-.5)*16*devicePixelRatio,vy:(-Math.random()*14-4)*devicePixelRatio,r:(3+Math.random()*4)*devicePixelRatio,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
+  const cols=["#e7c982","#5f1730","#2a43b8","#c39233","#ffffff"];const ps=Array.from({length:90},()=>({x:W/2,y:H*.42,vx:(Math.random()-.5)*16*devicePixelRatio,vy:(-Math.random()*14-4)*devicePixelRatio,r:(3+Math.random()*4)*devicePixelRatio,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
   let f=0;(function step(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45*devicePixelRatio;p.a+=.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(++f<90)requestAnimationFrame(step);else x.clearRect(0,0,W,H)})()}
 
 /* ---------- theme ---------- */
 const mq=matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(){const t=S.set.theme;const dark=t==="dark"||(t==="auto"&&mq.matches);document.documentElement.classList.toggle("dark",dark);
-  document.querySelector('meta[name=theme-color]').content=dark?"#0a0e22":"#16204a"}
+  document.querySelector('meta[name=theme-color]').content=dark?"#3d0f1f":"#5f1730"}
 mq.addEventListener?mq.addEventListener("change",applyTheme):mq.addListener(applyTheme);
 
 /* ---------- tabs ---------- */
-const TABS=[["today","Today",'<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.6 2.6 4.8-5.2"/>'],["cards","Words",'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M7.5 10h9M7.5 14h5.5"/>'],["grammar","Grammar",'<path d="M4.5 19l5-14 5 14M6.8 13.5h5.4M16 9.5l3.5 3-3.5 3"/>'],["read","Read",'<path d="M4 5.5h6.5a2 2 0 012 2V19a2 2 0 00-2-2H4zM20 5.5h-6.5a2 2 0 00-2 2V19a2 2 0 012-2H20z"/>'],["practice","Practice",'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7M10 3h4"/>'],["test","Test",'<path d="M6.5 3.5h11v17l-5.5-3.4-5.5 3.4z"/>']];
-$("tabs").innerHTML=TABS.map(t=>`<button data-v="${t[0]}" aria-label="${t[1]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg>${t[1]}</button>`).join("");
+const TABS=[["today","Today",'<rect class="f" x="3.75" y="5" width="16.5" height="15.25" rx="3"/><path d="M3.75 9.75h16.5M8.25 3v3.5M15.75 3v3.5"/><path d="M8.6 14.6l2.2 2.1 4.6-4.6"/>'],
+ ["cards","Words",'<rect x="3" y="7.25" width="13" height="13.25" rx="2.5"/><path class="f" d="M7 7.25V5.5A2.5 2.5 0 019.5 3h9A2.5 2.5 0 0121 5.5v9a2.5 2.5 0 01-2.5 2.5H16"/><path d="M6.5 12.25h6M6.5 15.75h4"/>'],
+ ["grammar","Grammar",'<path class="f" d="M12 2.75l5.25 6.5L12 21.25 6.75 9.25z"/><path d="M12 9.25v6"/><circle cx="12" cy="9.6" r="1.35"/>'],
+ ["read","Read",'<rect class="f" x="3" y="4.5" width="13.5" height="15.5" rx="2.25"/><path d="M16.5 8.75h2.75a1.25 1.25 0 011.25 1.25v7.75a2.25 2.25 0 01-4 1.4M6.5 8.5h6.5M6.5 12h6.5M6.5 15.5h4"/>'],
+ ["practice","Practice",'<circle class="f" cx="12" cy="13.5" r="7.25"/><path d="M12 9.75v3.75l2.5 1.75M9.75 3h4.5M12 3v3.25M18.25 7l1.25-1.25"/>'],
+ ["test","Test",'<circle class="f" cx="12" cy="9.5" r="6"/><path d="M8.6 14.4L7.25 21 12 18.75 16.75 21l-1.35-6.6"/><path d="M9.75 9.5l1.6 1.6 3-3.1"/>']];
+$("tabs").innerHTML=TABS.map(t=>`<button data-v="${t[0]}" aria-label="${t[1]}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg></span>${t[1]}</button>`).join("");
 let curView="today";
 function show(v){if(!TABS.some(t=>t[0]===v))v="today";curView=v;document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
@@ -107,14 +143,14 @@ function renderToday(){autoTicks();const d=T();const done=S.done[d];const c=S.co
   $("ladder").innerHTML=LEVELS.map((l,i)=>`<span class="${i<=li?"on":""}" title="${l[0]}"></span>`).join("");
   const R=74,C=2*Math.PI*R,a1=s.M/total,a2=s.K/total,a3=s.L/total;
   const arc=(f,off,col)=>f>0?`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${col}" stroke-width="15" stroke-dasharray="${C*f} ${C}" stroke-dashoffset="${-C*off}" transform="rotate(-90 100 100)"/>`:"";
-  let ticks="";for(let i=0;i<60;i++){const a=i*6*Math.PI/180,r2=i%5?88:84;ticks+=`<line x1="${(100+93*Math.sin(a)).toFixed(1)}" y1="${(100-93*Math.cos(a)).toFixed(1)}" x2="${(100+r2*Math.sin(a)).toFixed(1)}" y2="${(100-r2*Math.cos(a)).toFixed(1)}" stroke="rgba(255,255,255,.32)" stroke-width="1.3"/>`}
-  $("stamp").innerHTML=`${ticks}<circle cx="100" cy="100" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="15"/>${arc(a3,a1+a2,"rgba(255,255,255,.4)")}${arc(a2,a1,"#8ea4ff")}${arc(a1,0,"#4fcf98")}<circle cx="100" cy="100" r="56" fill="none" stroke="rgba(255,255,255,.3)" stroke-dasharray="2 4"/><text x="100" y="106" text-anchor="middle" font-size="42" font-weight="600">${pct}%</text><text x="100" y="128" text-anchor="middle" font-size="12.5" opacity=".75" font-family="Inst,sans-serif">words known</text>`;
+  let ticks="";for(let i=0;i<60;i++){const a=i*6*Math.PI/180,r2=i%5?88:84;ticks+=`<line x1="${(100+93*Math.sin(a)).toFixed(1)}" y1="${(100-93*Math.cos(a)).toFixed(1)}" x2="${(100+r2*Math.sin(a)).toFixed(1)}" y2="${(100-r2*Math.cos(a)).toFixed(1)}" stroke="rgba(231,201,130,.45)" stroke-width="1.3"/>`}
+  $("stamp").innerHTML=`${ticks}<circle cx="100" cy="100" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="15"/>${arc(a3,a1+a2,"rgba(255,255,255,.32)")}${arc(a2,a1,"rgba(255,255,255,.82)")}${arc(a1,0,"#e7c982")}<circle cx="100" cy="100" r="56" fill="none" stroke="rgba(231,201,130,.45)" stroke-dasharray="2 4"/><text x="100" y="106" text-anchor="middle" font-size="42" font-weight="600">${pct}%</text><text x="100" y="128" text-anchor="middle" font-size="12.5" opacity=".75" font-family="Text,sans-serif">words known</text>`;
   if(S.test){const left=Math.round((new Date(S.test+"T12:00:00")-new Date(d+"T12:00:00"))/864e5);$("countdown").hidden=false;$("countdown").textContent=left>0?`${left} day${left===1?"":"s"} to your test`:left===0?"Test day. Bonne chance !":"Test date passed: set a new one"}else $("countdown").hidden=true;
   const due=dueCount();const nl=newLeft();
   $("gostudy").innerHTML=due||nl?`<svg viewBox="0 0 24 24"><path d="M7 4.5l11 7.5-11 7.5z"/></svg>${due?`Review ${due} word${due===1?"":"s"}`:`Learn ${nl} new words`}`:`<svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7"/></svg>Words done · do a timed passage`;
   const streak=streakOf();
   $("kpis").innerHTML=`<div class="kpi gold"><b>${streak}</b><span>day streak</span></div><div class="kpi"><b>${known}</b><span>of ${total} words known</span></div><div class="kpi"><b>${s.passages}</b><span>passages done</span></div><div class="kpi"><b>${s.spots}</b><span>revisions done</span></div>`;
-  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
+  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${di(k)}${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
   const mk=Object.entries(S.marks).filter(([k,v])=>v&&v.date).sort((a,b)=>a[1].date<b[1].date?-1:1);
   if(mk.length){const avg=v=>{const xs=RUB.map(r=>v[r[0]]).filter(Boolean);return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:0};const last=mk.slice(-6);
     const per=RUB.map(r=>{const xs=mk.map(([k,v])=>v[r[0]]).filter(Boolean).slice(-5);return [r[1],xs.length?(xs.reduce((a,b)=>a+b,0)/xs.length):0]});
@@ -142,7 +178,7 @@ function practiceCard(){const p=pool();cur=p.length?p[Math.floor(Math.random()*p
 function record(ok){const k=idOf(cur);const wasNew=isNew(cur);let b=S.box[k]||0;b=ok?Math.min(b+1,5):0;S.box[k]=b;S.next[k]=addDays(today(),ok?(BOXDAYS[b]||1):0);const d=T();S.counts[d].cards++;if(wasNew)S.counts[d].newc=(S.counts[d].newc||0)+1;
   if(S.counts[d].cards===20&&!S.done[d].cards){S.done[d].cards=true;setTimeout(()=>{burst();haptic("win");toast("20 cards done for today")},150)}save()}
 function renderCards(){syncMine();if(CATS.length!==2+new Set(CARDS.map(c=>c[0])).size)mkCats();
-  $("cats").innerHTML=CATS.map(c=>{const n=c==="Weak words"?CARDS.filter(isWeak).length:c==="All"?null:CARDS.filter(x=>x[0]===c&&isDue(x)).length;return `<button class="chip" data-c="${esc(c)}" aria-pressed="${c===cat}">${esc(c)}${n?`<span class="n">${n}</span>`:""}</button>`}).join("");
+  $("cats").innerHTML=CATS.map(c=>{const n=c==="Weak words"?CARDS.filter(isWeak).length:c==="All"?null:CARDS.filter(x=>x[0]===c&&isDue(x)).length;return `<button class="chip" data-c="${esc(c)}" aria-pressed="${c===cat}">${di(c)}${esc(c)}${n?`<span class="n">${n}</span>`:""}</button>`}).join("");
   const p=pool();const due=p.filter(isDue).length;const nw=p.filter(isNew).length;const learnt=p.filter(c=>(S.box[idOf(c)]||0)>=3).length;
   $("due").innerHTML=`<div class="stat"><span><b>${due}</b> to review</span><span><b>${Math.min(nw,newLeft())}</b> new today</span><span><b>${learnt}</b>/${p.length} known</span></div><div class="bar"><i style="width:${p.length?learnt/p.length*100:0}%"></i></div>`;
   document.querySelectorAll("#cmode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===mode));
@@ -153,7 +189,7 @@ function renderCards(){syncMine();if(CATS.length!==2+new Set(CARDS.map(c=>c[0]))
   if(!cur&&!chk)pickCard();
   if(!cur){$("cardzone").innerHTML=`<div class="panel empty"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" fill="none" stroke="var(--green)" stroke-width="3"/><path d="M20 33l8 8 16-17" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><h3 style="justify-content:center;margin:0 0 6px">${p.length?"All caught up":"Nothing here yet"}</h3><p class="small" style="margin:0 0 16px">${cat==="Weak words"?"Words you miss land here.":p.length?"Your next reviews come back tomorrow. Extra practice doesn't change your schedule.":""}</p>${p.length?`<button class="btn p" id="extra">Extra practice</button>`:""}</div>`;return}
   const res=chk;
-  $("cardzone").innerHTML=`<form id="ansform" autocomplete="off"><div class="flash ${res?(res.ok?"ok":"bad"):""}" id="flash"><span class="tag"><span>${esc(cur[0])}</span>${extra?"<span>practice</span>":isNew(cur)?'<span class="new">NEW</span>':""}</span><div class="hwrow"><div class="hw">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${res?`<div class="verdict ${res.ok?"ok":"bad"}">${res.ok?(res.typo?"Right · small typo":"Correct"):"Not quite"}</div>${res.typed?`<div class="yours">You wrote: <span class="${res.ok?"r":"w"}">${esc(res.typed)}</span></div>`:""}<div class="en">${esc(cur[2])}</div>${cur[3]?`<div class="note">${esc(cur[3])}</div>`:""}${exBlock(cur,true)}`:`${hint?exBlock(cur,false):EX[cur[1]]?`<button type="button" class="linkbtn exbtn" id="exhint">See it in a sentence</button>`:""}<input id="answer" class="inline" type="text" placeholder="Type the English" aria-label="Your English answer" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go">`}</div>
+  $("cardzone").innerHTML=`<form id="ansform" autocomplete="off"><div class="flash ${res?(res.ok?"ok":"bad"):""}" id="flash"><span class="tag"><span>${di(cur[0])}${esc(cur[0])}</span>${extra?"<span>practice</span>":isNew(cur)?'<span class="new">New word</span>':""}</span><div class="hwrow"><div class="hw">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${res?`<div class="verdict ${res.ok?"ok":"bad"}">${res.ok?(res.typo?"Right · small typo":"Correct"):"Not quite"}</div>${res.typed?`<div class="yours">You wrote: <span class="${res.ok?"r":"w"}">${esc(res.typed)}</span></div>`:""}<div class="en">${esc(cur[2])}</div>${cur[3]?`<div class="note">${esc(cur[3])}</div>`:""}${exBlock(cur,true)}`:`${hint?exBlock(cur,false):EX[cur[1]]?`<button type="button" class="linkbtn exbtn" id="exhint">See it in a sentence</button>`:""}<input id="answer" class="inline" type="text" placeholder="Type the English" aria-label="Your English answer" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go">`}</div>
   ${res&&!res.ok?retypeBlock(res):""}<div class="ans">${res?(!res.ok&&!res.fixed?`<button class="btn p" type="submit">Check</button><button class="btn" id="flipres" type="button">I was right</button>`:`<button class="btn p" id="next" type="submit">Next</button><button class="btn" id="flipres" type="button">${res.ok?"Count as wrong":"I was right"}</button>`):`<button class="btn p" type="submit">Check</button><button class="btn" id="skip" type="button">Show answer</button>`}</div><p class="kbhint">Tap an empty spot to close the keyboard and see the decks</p></form>`;
   const inp=$("answer")||$("retype");if(inp){inp.focus({preventScroll:true})}else{const nb=$("next");if(nb)nb.focus({preventScroll:true})}
 }
@@ -168,7 +204,7 @@ function tryRetype(r,val){const t=norm(val);const as=answers(cur[2]);const ok=!!
 function grade(ok){if(!extra)record(ok);else{const d=T();S.counts[d].cards++;save()}chk=null;if(extra)practiceCard();else pickCard();renderCards();updateBadge()}
 function newQuiz(){practiceCard();if(!cur)return;const same=CARDS.filter(c=>c!==cur&&c[0]===cur[0]&&c[2]!==cur[2]);const others=same.length>=3?same:CARDS.filter(c=>c!==cur&&c[2]!==cur[2]);const opts=[cur];let g=0;while(opts.length<4&&g++<200){const o=others[Math.floor(Math.random()*others.length)];if(!opts.some(x=>x[2]===o[2]))opts.push(o)}quiz={opts:opts.sort(()=>Math.random()-.5),ans:null}}
 function renderQuiz(){if(!quiz)newQuiz();if(!cur){$("cardzone").innerHTML=`<div class="panel empty"><b>No cards here yet.</b></div>`;return}
-  $("cardzone").innerHTML=`<div class="panel"><div class="eyebrow">${esc(cur[0])}</div><div class="hwrow" style="justify-content:flex-start"><div class="hw" style="font-size:32px;margin:8px 0 4px">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${quiz.ans===null&&EX[cur[1]]?exBlock(cur,false):""}<div class="small">Choose the best English</div><div class="opts">${quiz.opts.map((o,i)=>`<button class="opt ${quiz.ans!==null?(o===cur?"ok":i===quiz.ans?"bad":""):""}" data-i="${i}" ${quiz.ans!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${quiz.ans!==null?`${cur[3]?`<p class="small" style="margin-top:12px">${esc(cur[3])}</p>`:""}${exBlock(cur,true)}${quiz.fix?retypeBlock(quiz.fix):""}${quiz.fix&&!quiz.fix.fixed?`<button class="btn p wide" id="qcheck" style="margin-top:12px">Check</button>`:`<button class="btn p wide" id="qnext" style="margin-top:12px">Next</button>`}`:""}</div>`;const r=$("retype");if(r)r.focus({preventScroll:true})}
+  $("cardzone").innerHTML=`<div class="panel"><div class="eyebrow">${di(cur[0])}${esc(cur[0])}</div><div class="hwrow" style="justify-content:flex-start"><div class="hw" style="font-size:32px;margin:8px 0 4px">${esc(cur[1])}</div>${sayBtn(cur[1])}</div>${quiz.ans===null&&EX[cur[1]]?exBlock(cur,false):""}<div class="small">Choose the best English</div><div class="opts">${quiz.opts.map((o,i)=>`<button class="opt ${quiz.ans!==null?(o===cur?"ok":i===quiz.ans?"bad":""):""}" data-i="${i}" ${quiz.ans!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${quiz.ans!==null?`${cur[3]?`<p class="small" style="margin-top:12px">${esc(cur[3])}</p>`:""}${exBlock(cur,true)}${quiz.fix?retypeBlock(quiz.fix):""}${quiz.fix&&!quiz.fix.fixed?`<button class="btn p wide" id="qcheck" style="margin-top:12px">Check</button>`:`<button class="btn p wide" id="qnext" style="margin-top:12px">Next</button>`}`:""}</div>`;const r=$("retype");if(r)r.focus({preventScroll:true})}
 $("cardzone").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="retype"&&mode==="quiz"){e.preventDefault();$("qcheck")&&$("qcheck").click()}});
 $("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();cat=b.dataset.c;cur=null;quiz=null;chk=null;renderCards()});
 $("cmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();gQuit();mode=b.dataset.m;cur=null;chk=null;quiz=null;renderCards()});
@@ -265,7 +301,7 @@ function renderGame(){const z=$("cardzone");gs();
     z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button>
     <div class="ghead"><div><b class="serif">${g.name}</b><span class="small">${g.desc}</span></div><div class="gprog"><b>${n}</b>/${sets.length}<small>mastered</small></div></div>
     ${nxt>=0?`<button class="btn p wide" data-gs="${nxt}" style="margin-bottom:14px">${gBest(g.id,nxt)?"Retry":"Play"} set ${nxt+1} · ${setName(sets[nxt])}</button>`:`<p class="small">Every set mastered. Replay any set for three stars.</p>`}
-    <div class="gsets">${sets.map((st,i)=>{const b=gBest(g.id,i),open=gOpen(g.id,i);return `<button class="gset ${open?"":"locked"} ${b&&b.m?"m":""} ${i===nxt?"cur":""}" ${open?`data-gs="${i}"`:"disabled"} type="button"><span class="gn">${i+1}</span><span class="gd">${setName(st)}</span>${open?(b&&b.m?starRow(b.stars):`<span class="small">${b?"Not yet":"New"}</span>`):'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/></svg>'}</button>`}).join("")}</div>`;return}
+    <div class="gsets">${sets.map((st,i)=>{const b=gBest(g.id,i),open=gOpen(g.id,i);return `<button class="gset ${open?"":"locked"} ${b&&b.m?"m":""} ${i===nxt?"cur":""}" ${open?`data-gs="${i}"`:"disabled"} type="button"><span class="gn">${di(st.deck)}</span><span class="gd">${i+1}. ${setName(st)}</span>${open?(b&&b.m?starRow(b.stars):`<span class="small">${b?"Not yet":"New"}</span>`):'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/></svg>'}</button>`}).join("")}</div>`;return}
   if(G.done){const s=G.sum,g=GAMES.find(x=>x.id===G.id),sets=setsOf(G.id);const nextSet=!s.blitz&&s.m&&G.set+1<sets.length;
     z.innerHTML=`<div class="panel gend ${s.m||s.st?"win":""}"><div class="eyebrow">${g.name}${s.blitz?"":` · Set ${G.set+1} · ${setName(sets[G.set])}`}</div><h2 class="serif" style="margin:8px 0 6px">${s.blitz?(s.record?"New best!":s.first?"First score":"Time"):s.m?(s.unlock?`Mastered. Set ${G.set+2} unlocked`:"Mastered"):"So close"}</h2>${starRow(s.st)}
       <div class="gstats">${s.line.map(l=>`<div><b>${l[0]}</b><small>${l[1]}</small></div>`).join("")}<div><b>${s.pts.toLocaleString()}</b><small>${s.record?"new best":"points"}</small></div></div>
@@ -453,7 +489,7 @@ function renderRead(){const z=$("readzone");if(!z)return;document.querySelectorA
   const head=$("readhead");if(head)head.style.display=RD.open?"none":"";
   if(RD.open){const st=NEWS.find(n=>n.id===RD.open);const allShown=st.p.every((_,i)=>RD.show[st.id+":"+i]);
     z.innerHTML=`<button class="back" id="rback" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All stories</button>
-    <article class="story"><div class="eyebrow">${esc(st.dom)}</div><div class="hwrow" style="justify-content:flex-start;align-items:flex-start"><h2 class="stt">${esc(st.t)}</h2>${sayBtn(st.t)}</div>${allShown?`<p class="ste">${esc(st.te)}</p>`:""}
+    <article class="story"><div class="eyebrow">${di(st.dom)}${esc(st.dom)}</div><div class="hwrow" style="justify-content:flex-start;align-items:flex-start"><h2 class="stt">${esc(st.t)}</h2>${sayBtn(st.t)}</div>${allShown?`<p class="ste">${esc(st.te)}</p>`:""}
     ${st.p.map((pp,i)=>{const k=st.id+":"+i,on=RD.show[k],tr=RD.tr[k],dk=k;return `<div class="para ${on?"on":""}"><p class="pfr">${esc(pp[0])}</p>
       ${tr?`<textarea class="ptr" data-d="${dk}" rows="4" placeholder="Your English version" aria-label="Your translation of paragraph ${i+1}">${esc(S.ndraft[dk]||"")}</textarea>`:""}
       ${on?`<p class="pen">${esc(pp[1])}</p>`:""}
@@ -472,7 +508,7 @@ function renderRead(){const z=$("readzone");if(!z)return;document.querySelectorA
   const doms=["All",...new Set(NEWS.map(n=>n.dom))];const list=NEWS.filter(n=>RD.dom==="All"||n.dom===RD.dom);const done=NEWS.filter(n=>S.nread[n.id]).length;
   z.innerHTML=`<div class="chips" id="rdoms">${doms.map(d=>`<button class="chip" data-dom="${esc(d)}" aria-pressed="${d===RD.dom}">${esc(d)}</button>`).join("")}</div>
   <div class="stat"><span><b>${done}</b>/${NEWS.length} read</span><span><b>${(S.mine||[]).length}</b> terms saved</span></div>
-  <div class="stories">${list.map(n=>`<button class="srow ${S.nread[n.id]?"read":""}" data-open="${n.id}" type="button"><span class="eyebrow">${esc(n.dom)}${S.nread[n.id]?' · <span class="ok">read</span>':""}</span><b class="serif">${esc(n.t)}</b><small>${n.p.length} paragraphs · ${n.terms.length} key terms</small></button>`).join("")}</div>`}
+  <div class="stories">${list.map(n=>`<button class="srow ${S.nread[n.id]?"read":""}" data-open="${n.id}" type="button"><span class="eyebrow">${di(n.dom)}${esc(n.dom)}${S.nread[n.id]?' · <span class="ok">read</span>':""}</span><b class="serif">${esc(n.t)}</b><small>${n.p.length} paragraphs · ${n.terms.length} key terms</small></button>`).join("")}</div>`}
 $("v-read").addEventListener("click",e=>{const t=e.target;let b;
   if(b=t.closest("#rtab button")){haptic();RD.tab=b.dataset.r;RD.open=null;renderRead();return}
   if(b=t.closest("[data-dom]")){haptic();RD.dom=b.dataset.dom;renderRead();return}
