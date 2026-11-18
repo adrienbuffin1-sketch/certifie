@@ -277,12 +277,13 @@ td:first-child{font-family:News,serif;font-size:16px}
 .burst{position:fixed;inset:0;pointer-events:none;z-index:35}
 
 /* keyboard open: give the card the room */
-html.kb nav{display:none}
 html.kb #v-cards>h2,html.kb #v-cards>.sub,html.kb #cmode,html.kb #cats,html.kb #due{display:none}
 html.kb #v-cards .flash{min-height:0;padding:30px 16px 18px;box-shadow:var(--shadow)}
 html.kb #v-cards .flash .hw{font-size:30px}
 html.kb #v-cards .flash .inline{margin-top:16px}
 html.kb main{padding-top:10px}
+.kbhint{display:none}
+html.kb .kbhint{display:block;text-align:center;font-size:12.5px;color:var(--mute);margin:10px 0 0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(prefers-reduced-motion:no-preference){.xp i,.sb i,.bar i{transition:width .6s ease}}
 </style>
