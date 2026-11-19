@@ -62,7 +62,20 @@ function startTick(){clearInterval(tick);tick=setInterval(()=>{const c=st();cons
   if(run.tasks[run.cur]&&(run.tasks[run.cur].spent%15000===0))save()},1000)}
 function finishRun(){const c=st();const run=c.run;if(!run)return;clearInterval(tick);
   run.tasks.forEach(t=>{if(t.type==="t")t.auto=autoCheck(byId(TEXTS,t.id),t.text);else t.diff=revAnalyse(byId(REVS,t.id),t.text)});
-  run.phase="review";run.endedAt=NOW();save();renderTest();const m=$("main");if(m)m.scrollTop=0}
+  run.endedAt=NOW();run.phase="marking";save();renderTest();const m=$("main");if(m)m.scrollTop=0;aiMarkRun()}
+let marking=false;
+async function aiMarkRun(){const c=st();const run=c.run;if(!run||run.phase!=="marking"||marking)return;marking=true;
+  try{if(!window.AIM||!(await AIM.available()))throw new Error("unavailable");
+    for(const t of run.tasks){
+      if(t.type==="t"&&!t.ai){const tx=byId(TEXTS,t.id);t.ai=await AIM.markTranslation({fr:tx.fr,brief:tx.brief,model:tx.model,notes:tx.cp.map(cp=>cp[0]+": "+cp[4]),text:t.text});save()}
+      if(t.type==="r"&&!t.aiDone){const r=byId(REVS,t.id);const d=t.diff;
+        const changed=d.res.filter(x=>x.state==="changed").map(x=>({id:"e"+x.k,b:r.errs[x.k].b,corr:r.errs[x.k].corr,seg:x.seg,note:r.errs[x.k].note}));
+        const extra=d.extra.map(x=>({id:"x"+x.i,from:x.from,to:x.to}));
+        const j=await AIM.judgeRevision({fr:r.fr,bad:r.bad,mine:t.text,changed,extra});t.judge=t.judge||{};t.why={};
+        changed.forEach(x=>{const v=j.changed[x.id];if(v){t.judge[x.id]=v.ok?"ok":"bad";t.why[x.id]=v.why}});
+        extra.forEach(x=>{const v=j.extra[x.id];if(v){t.judge[x.id]=v.error?"err":"neutral";t.why[x.id]=v.why}});t.aiDone=true;save()}}
+    marking=false;finalise()}
+  catch(e){marking=false;const c2=st();if(c2.run&&c2.run.phase==="marking"){c2.run.phase="review";c2.run.aiFail=e&&e.code==="not_granted"?"Claude marking was not allowed in this view.":(window.AIM&&AIM.native&&!AIM.configured)?"Automatic marking is not connected in the iPhone app yet.":"Claude couldn't be reached to mark this.";save();renderTest()}}}
 
 /* ---------- marking engine: translation ---------- */
 const US=[["color","colour"],["favor","favour"],["behavior","behaviour"],["labor","labour"],["neighbor","neighbour"],["center","centre"],["meter","metre"],["liter","litre"],["defense","defence"],["license","licence"],["traveled","travelled"],["traveling","travelling"],["enroll","enrol"],["fulfill","fulfil"],["aging","ageing"],["gray","grey"],["catalog","catalogue"],["analyze","analyse"],["organize","organise"],["organization","organisation"],["realize","realise"],["recognize","recognise"],["apologize","apologise"],["prioritize","prioritise"],["summarize","summarise"],["criticize","criticise"],["mom","mum"],["sidewalk","footpath"],["gasoline","petrol"],["apartment building","block of flats"]];
@@ -173,11 +186,14 @@ function topTags(n){const c=st();const cnt={};c.errlog.slice(-150).forEach(e=>{c
 
 /* ---------- finalise an attempt ---------- */
 function finalise(){const c=st();const run=c.run;const res=[];
-  run.tasks.forEach((t,ti)=>{if(t.type==="t"){const tx=byId(TEXTS,t.id);const conf=(t.auto||[]).filter((a,i)=>!a.info&&(t.keep||{})[i]!=="no");
-      const own=(t.own||[]);const errs=conf.concat(own);const bands=tBands(errs,words(tx.fr));const v=verdict(bands);
+  run.tasks.forEach((t,ti)=>{if(t.type==="t"){const tx=byId(TEXTS,t.id);let errs,bands;
+      if(t.ai){errs=t.ai.errs;bands={};["mt","tn","lp"].forEach(k=>{const own=errs.filter(e=>(e.tag==="brief"?"tn":CAT2CRIT[e.cat])===k);bands[k]={b:t.ai.bands[k].b,why:t.ai.bands[k].why,M:own.filter(e=>e.sev==="major").length,m:own.filter(e=>e.sev!=="major").length}})}
+      else{const conf=(t.auto||[]).filter((a,i)=>!a.info&&(t.keep||{})[i]!=="no");errs=conf.concat(t.own||[]);bands=tBands(errs,words(tx.fr))}
+      const v=verdict(bands);
       const unseen=!c.seen.includes(tx.id);
       errs.forEach(e=>{logErr({kind:"t",id:tx.id,cat:e.cat,tag:e.tag||CAT2TAG[e.cat],sev:e.sev,src:e.src||"",mine:e.mine||"",fix:e.fix||"",note:e.note||""});
-        if(e.k==="cp"&&e.fix){const snt=sentenceOf(tx.fr,e.src);const en=sentenceOf(tx.model,e.fix);addCard(e.src,e.fix,snt&&en?[snt,en]:null)}});
+        if(e.k==="cp"&&e.fix){const snt=sentenceOf(tx.fr,e.src);const en=sentenceOf(tx.model,e.fix);addCard(e.src,e.fix,snt&&en?[snt,en]:null)}
+        if(e.k==="ai"&&e.src&&e.fix&&e.src.length<60&&["dist","omit","unid"].includes(e.cat)){const snt=sentenceOf(tx.fr,e.src);addCard(e.src,e.fix,snt?[snt,""]:null)}});
       if(!c.seen.includes(tx.id))c.seen.push(tx.id);
       t.result={bands,v,errs:errs.length,major:errs.filter(e=>e.sev==="major").length};
       res.push({type:"t",id:tx.id,v,bands:{mt:bands.mt.b,tn:bands.tn.b,lp:bands.lp.b},n:errs.length,spent:t.spent||0,w:words(t.text),src:words(tx.fr),unseen})}
@@ -195,11 +211,12 @@ const chip=v=>`<span class="ctv ${v}">${v==="pass"?"Pass (estimate)":v==="border
 const briefTable=b=>`<table class="ctbrief"><tbody><tr><th>Domain</th><td>${esc(b.domain)}</td></tr><tr><th>Topic</th><td>${esc(b.topic)}</td></tr><tr><th>Source text type</th><td>${esc(b.type)}</td></tr><tr><th>Purpose</th><td>${esc(b.purpose)}</td></tr><tr><th>Audience</th><td>${esc(b.audience)}</td></tr></tbody></table>`;
 const catOpts=sel=>`<option value="">Choose a NAATI category</option>`+Object.keys(CATS).map(k=>`<option value="${k}" ${sel===k?"selected":""}>${CATS[k]}</option>`).join("");
 const tagOpts=sel=>Object.keys(TAGS).map(k=>`<option value="${k}" ${sel===k?"selected":""}>${TAGS[k]}</option>`).join("");
-const DISCL=`<p class="small ctdis">Estimate produced by Certifié from its own checks and your self-review. It is not a NAATI result and NAATI examiners may judge differently.</p>`;
+const DISCL=`<p class="small ctdis">Estimate produced by Certifié (marked by Claude, an AI, or by your own review). It is not a NAATI result and NAATI examiners may judge differently.</p>`;
 function bandRow(key,b,extra){const p=CRIT[key].pass,ok=b<=p;return `<div class="ctband ${ok?"ok":"no"}"><div><b>${CRIT[key].name}</b><small>${CRIT[key].group} · NAATI pass requirement: Band ${p} or above${extra?" · "+extra:""}</small></div><span class="bnum">Band ${b}</span></div>`}
 
 /* ---------- renderers ---------- */
 function renderTest(){const z=$("ctzone");if(!z)return;const c=st();syncCards();const run=c.run;
+  if(run&&run.phase==="marking"){z.innerHTML=`<div class="panel ctmarking"><div class="spin"></div><b class="serif">Claude is marking your work</b><p class="small">Every sentence is checked against the source, like an examiner would. This takes about a minute per translation.</p></div>`;aiMarkRun();return}
   if(run&&run.phase!=="done")return run.phase==="pick"?renderPick(z,run):run.phase==="review"?renderReview(z,run):renderWork(z,run);
   if(run&&run.phase==="done")return renderDone(z,run);
   renderHub(z)}
@@ -213,6 +230,7 @@ function renderHub(z){const c=st();const r=readiness();const tops=topTags(5);
    <button class="ctbig" data-ct="tdrill" type="button"><b>Translation drill</b><span>One ~250-word general text · ${c.set.tmin} min</span></button>
    <button class="ctbig" data-ct="rdrill" type="button"><b>Revision drill</b><span>Correct and categorise 14–18 errors · ${c.set.rmin} min</span></button>
   </div>
+  <p class="small">${window.AIM&&AIM.native&&!AIM.configured?"Automatic marking by Claude isn't connected in the iPhone app yet: you'll check your work against the model.":"Your translations are marked by Claude against the NAATI rubric criteria. Marks are estimates, not NAATI results."}</p>
   <p class="small">Text bank: ${TEXTS.length-tUsed} of ${TEXTS.length} translation texts and ${REVS.length-rUsed} of ${REVS.length} revision texts left unseen. Texts only repeat once you've done them all.</p>
   <h3>Your error log</h3>${tops.length?`<div class="panel">${tops.map(([tag,n],i)=>`<div class="cttop"><span class="ctrank">${i+1}</span><div><b>${esc(TAGS[tag]||tag)}</b><small>NAATI category: ${CATS[TAG2CAT[tag]]||"—"} · ${Math.round(n)} recent</small></div>${TAG2BANK[tag]?`<button class="rb p" data-gobank="${TAG2BANK[tag]}" type="button">Drill</button>`:`<button class="rb" data-gogram type="button">Grammar</button>`}</div>`).join("")}
     <button class="linkbtn" id="ctlogall" type="button">See every logged error (${c.errlog.length})</button></div>`:`<div class="panel empty"><p class="small" style="margin:0">Every error you make in a mock or drill is saved here, ranked by how often it comes back. Recurring errors are turned into cards (Words → My errors) and drills (Grammar tab).</p></div>`}
@@ -272,7 +290,7 @@ function renderCat(z,run,t,r,head){const d=revAnalyse(r,t.text);t.cats=t.cats||{
   <details class="ctsrc"><summary>NAATI error categories</summary>${Object.keys(CATS).map(k=>`<p class="small"><b>${CATS[k]}:</b> ${CATDEF[k]}</p>`).join("")}</details>
   <div class="ans"><button class="btn" id="ctback" type="button">Back to editing</button><button class="btn p" data-ctfinish type="button">${run.tasks.length>1?"Finish test":"Finish and mark"}</button></div>`}
 function renderReview(z,run){const c=st();
-  z.innerHTML=`<div class="ctbar"><b>Check your work</b></div><div class="panel ctnote"><p style="margin:0">The app has compared your work with the model and its checklist of key points. Confirm or dismiss each possible error, and add any it missed. Be honest: your estimate depends on it.</p></div>`+
+  z.innerHTML=`<div class="ctbar"><b>Check your work</b><button class="linkbtn" id="ctretry" type="button">Try Claude again</button></div><div class="panel ctnote"><p style="margin:0">${run.aiFail?esc(run.aiFail)+" ":""}The app has compared your work with the model and its checklist of key points. Confirm or dismiss each possible error, and add any it missed.</p></div>`+
   run.tasks.map((t,ti)=>{if(t.type==="t"){const tx=byId(TEXTS,t.id);const A=t.auto||[];t.keep=t.keep||{};t.own=t.own||[];
     return `<h3>Translation: ${esc(tx.brief.topic)}</h3>
     <details class="ctsrc"><summary>Your translation · ${words(t.text)} words</summary><div class="ctfr">${esc(t.text||"(empty)").replace(/\n/g,"<br>")}</div></details>
@@ -298,14 +316,21 @@ function renderReview(z,run){const c=st();
 function renderDone(z,run){const c=st();
   z.innerHTML=`<div class="ctbar"><b>Results</b><button class="linkbtn" id="ctclose" type="button">Done</button></div>
   <div class="panel ctres ${run.overall}"><div class="eyebrow">${run.kind==="mock"?"Mock test: you must pass all three tasks":"Single task"}</div>${chip(run.overall)}${DISCL}</div>`+
-  run.tasks.map(t=>{if(t.type==="t"){const tx=byId(TEXTS,t.id);const R=t.result;const conf=(t.auto||[]).filter((a,i)=>!a.info&&(t.keep||{})[i]!=="no").concat(t.own||[]);
+  run.tasks.map(t=>{if(t.type==="t"&&t.ai){const tx=byId(TEXTS,t.id);const R=t.result;const A=t.ai;
+    return `<h3>Translation: ${esc(tx.brief.topic)} ${chip(R.v)}</h3><div class="panel">${bandRow("mt",R.bands.mt.b,R.bands.mt.why)}${bandRow("tn",R.bands.tn.b,R.bands.tn.why)}${bandRow("lp",R.bands.lp.b,R.bands.lp.why)}<p class="small" style="margin:8px 0 0">Marked by Claude · time on task ${Math.round((t.spent||0)/60000)} min · ${words(t.text)} words</p></div>
+    ${A.strengths||A.advice?`<div class="panel ctnote">${A.strengths?`<p style="margin:0 0 6px"><b>Good:</b> ${esc(A.strengths)}</p>`:""}${A.advice?`<p style="margin:0"><b>Work on:</b> ${esc(A.advice)}</p>`:""}</div>`:""}
+    <details class="ctsrc" open><summary>Your errors explained (${A.errs.length})</summary>${A.errs.length?A.errs.map(e=>`<div class="cterr"><div class="ctfh"><span class="ctcat2">${CATS[e.cat]}</span><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${TAGS[e.tag]||""}</span></div>${e.src?`<p class="ctq"><span>Source</span>${esc(e.src)}</p>`:""}${e.mine?`<p class="ctq"><span>You</span>${esc(e.mine)}</p>`:""}${e.fix?`<p class="ctq ok"><span>Correct</span>${esc(e.fix)}</p>`:""}${e.note?`<p class="small">${esc(e.note)}</p>`:""}</div>`).join(""):`<p class="small">No errors found.</p>`}</details>
+    ${A.corrected?`<details class="ctsrc" open><summary>Your translation, corrected</summary><div class="ctfr">${esc(A.corrected).replace(/\n/g,"<br>")}</div></details>`:""}
+    <details class="ctsrc"><summary>Model translation (one acceptable version)</summary><div class="ctfr">${esc(tx.model).replace(/\n/g,"<br>")}</div></details>`}
+   if(t.type==="t"){const tx=byId(TEXTS,t.id);const R=t.result;const conf=(t.auto||[]).filter((a,i)=>!a.info&&(t.keep||{})[i]!=="no").concat(t.own||[]);
     return `<h3>Translation: ${esc(tx.brief.topic)} ${chip(R.v)}</h3><div class="panel">${bandRow("mt",R.bands.mt.b,`${R.bands.mt.M} major, ${R.bands.mt.m} minor`)}${bandRow("tn",R.bands.tn.b,`${R.bands.tn.M} major, ${R.bands.tn.m} minor`)}${bandRow("lp",R.bands.lp.b,`${R.bands.lp.M} major, ${R.bands.lp.m} minor`)}<p class="small" style="margin:8px 0 0">Time on task: ${Math.round((t.spent||0)/60000)} min · ${words(t.text)} words</p></div>
     ${conf.length?`<details class="ctsrc" open><summary>Your errors explained (${conf.length})</summary>${conf.map(e=>`<div class="cterr"><div class="ctfh"><span class="ctcat2">${CATS[e.cat]}</span><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${TAGS[e.tag]||""}</span></div>${e.src?`<p class="ctq"><span>Source</span>${esc(e.src)}</p>`:""}${e.mine?`<p class="ctq"><span>You</span>${esc(e.mine)}</p>`:""}${e.fix?`<p class="ctq ok"><span>Correct</span>${esc(e.fix)}</p>`:""}${e.note?`<p class="small">${esc(e.note)}</p>`:""}</div>`).join("")}</details>`:""}
     <details class="ctsrc"><summary>Corrected version (model translation)</summary><div class="ctfr">${esc(tx.model).replace(/\n/g,"<br>")}</div></details>`}
    const r=byId(REVS,t.id);const R=t.result;
    return `<h3>Revision: ${esc(r.brief.topic)} ${chip(R.v)}</h3><div class="panel">${bandRow("rs",R.bands.rs.b,`${R.bands.rs.fixed} of ${R.bands.rs.req} errors corrected · ${R.intro.length} introduced`)}${bandRow("ec",R.bands.ec.b,`${R.bands.ec.ok} of ${R.bands.ec.n} categorised acceptably`)}</div>
    <details class="ctsrc" open><summary>Every seeded error explained (${r.errs.length})</summary>${r.errs.map((e,k)=>{const x=t.diff.res[k];const ok=x.state==="fixed"||x.state==="ok-opt"||(x.state==="changed"&&(t.judge||{})["e"+k]==="ok");const cat=(t.cats||{})["e"+k];
-     return `<div class="cterr ${ok?"good":"bad"}"><div class="ctfh"><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${ok?"Corrected":e.optional?"Optional":"Missed"}${cat?` · you said: ${CATS[cat]}${e.cat.includes(cat)?" ✓":" ✗"}`:""}</span></div><p class="ctq"><span>Error</span>${esc(e.b)}</p><p class="ctq ok"><span>Correct</span>${esc(e.corr)}</p><p class="small">${e.cat.map(k2=>CATS[k2]).join(" or ")}. ${esc(e.note)}</p></div>`}).join("")}</details>
+     return `<div class="cterr ${ok?"good":"bad"}"><div class="ctfh"><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${ok?"Corrected":e.optional?"Optional":"Missed"}${cat?` · you said: ${CATS[cat]}${e.cat.includes(cat)?" ✓":" ✗"}`:""}</span></div><p class="ctq"><span>Error</span>${esc(e.b)}</p><p class="ctq ok"><span>Correct</span>${esc(e.corr)}</p><p class="small">${e.cat.map(k2=>CATS[k2]).join(" or ")}. ${esc(e.note)}${(t.why||{})["e"+k]?` <i>Claude: ${esc(t.why["e"+k])}</i>`:""}</p></div>`}).join("")}</details>
+   ${t.diff.extra.length?`<details class="ctsrc"><summary>Changes to parts that were already correct (${t.diff.extra.length})</summary>${t.diff.extra.map(x=>`<div class="cterr ${(t.judge||{})["x"+x.i]==="neutral"?"good":"bad"}"><div class="ctdiff"><del>${esc(x.from||"(nothing)")}</del><ins>${esc(x.to||"(deleted)")}</ins></div><p class="small">${(t.judge||{})["x"+x.i]==="neutral"?"Still correct, but avoid style edits.":"Counted as an introduced error."}${(t.why||{})["x"+x.i]?" "+esc(t.why["x"+x.i]):""}</p></div>`).join("")}</details>`:""}
    <details class="ctsrc"><summary>Corrected translation</summary><div class="ctfr">${esc(r.good).replace(/\n/g,"<br>")}</div></details>`}).join("")+
   `<p class="small">Errors from this attempt were added to your error log${st().cards.length?", and key terms you missed are now cards in Words → My errors":""}.</p><button class="btn p wide" id="ctclose2" type="button">Back to the Test track</button>`}
 
@@ -347,6 +372,7 @@ document.addEventListener("click",e=>{const t=e.target;let b;const c=st();
     if(!g("mine")){C.toast("Type what you wrote first");return}const tag=g("tag");c.run.tasks[ti].own.push({k:"own",cat:TAG2CAT[tag],tag,sev:g("sev"),mine:g("mine"),fix:g("fix"),src:"",note:"Added by you"});save();renderTest();return}
   if(b=t.closest("[data-delown]")){const [ti,j]=b.dataset.delown.split(":").map(Number);c.run.tasks[ti].own.splice(j,1);save();renderTest();return}
   if(t.closest("#ctscore")){finalise();scrollTop();return}
+  if(t.closest("#ctretry")){c.run.phase="marking";c.run.aiFail="";save();renderTest();return}
   if(t.closest("#ctclose")||t.closest("#ctclose2")){c.run=null;save();renderTest();scrollTop();return}
   if(t.closest("#ctlogall")){const box=$("ctlogbox");box.innerHTML=box.innerHTML?"":`<div class="panel">${c.errlog.slice(-60).reverse().map(e=>`<div class="cterr"><div class="ctfh"><span class="ctcat2">${CATS[e.cat]||e.cat}</span><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${TAGS[e.tag]||""} · ${e.d}</span></div>${e.src?`<p class="ctq"><span>Source</span>${esc(e.src)}</p>`:""}${e.mine?`<p class="ctq"><span>You</span>${esc(e.mine)}</p>`:""}${e.fix?`<p class="ctq ok"><span>Correct</span>${esc(e.fix)}</p>`:""}</div>`).join("")}</div>`;return}
   if(b=t.closest("[data-gobank]")){C.show("grammar");startDrill(b.dataset.gobank);return}

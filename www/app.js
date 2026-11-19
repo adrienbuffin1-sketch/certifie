@@ -379,6 +379,28 @@ function renderSpot(it){const st=S.spot[it.key]||{found:[],miss:[],complete:fals
   <div class="row" style="margin-top:14px">${f<n&&!reveal?`<button class="btn" id="reveal">Show what I missed</button>`:""}<button class="btn ghost" id="spotreset">Start again</button></div>
   ${(f===n||reveal)?`<details open><summary>Good translation</summary><div class="src" style="margin-top:8px">${esc(it.good)}</div></details>`:""}
   <p class="small" style="margin-top:12px">In the test you also write your corrections and justify them. Switch to <b>Rewrite</b> to practise that.</p></div>`}
+const BN={mt:"Meaning transfer",tn:"Textual norms and conventions",lp:"Language proficiency (English)"};const PASS={mt:2,tn:3,lp:2};
+function aiBlock(A){if(!A)return "";const ok=["mt","tn","lp"].every(k=>A.bands[k].b<=PASS[k]);
+  return `<div class="aimark"><div class="row between"><b>Claude's marking</b><span class="ctv ${ok?"pass":"fail"}">${ok?"Pass (estimate)":"Not yet (estimate)"}</span></div>
+  ${["mt","tn","lp"].map(k=>`<div class="ctband ${A.bands[k].b<=PASS[k]?"ok":"no"}"><div><b>${BN[k]}</b><small>${esc(A.bands[k].why||"")}</small></div><span class="bnum">Band ${A.bands[k].b}</span></div>`).join("")}
+  ${A.advice?`<p style="margin:10px 0 0"><b>Work on:</b> ${esc(A.advice)}</p>`:""}
+  <h3>Errors (${A.errs.length})</h3>${A.errs.length?A.errs.map(e=>`<div class="cterr"><div class="ctfh"><span class="ctsev ${e.sev}">${e.sev}</span><span class="small">${esc({dist:"Distortion",omit:"Unjustified omission",add:"Unjustified addition",reg:"Inappropriate register",unid:"Unidiomatic expression",gram:"Grammar, syntax",spell:"Spelling",punct:"Punctuation"}[e.cat]||"")}</span></div>${e.src?`<p class="ctq"><span>Source</span>${esc(e.src)}</p>`:""}${e.mine?`<p class="ctq"><span>You</span>${esc(e.mine)}</p>`:""}${e.fix?`<p class="ctq ok"><span>Correct</span>${esc(e.fix)}</p>`:""}<p class="small">${esc(e.note)}</p></div>`).join(""):`<p class="small">No errors found.</p>`}
+  ${A.corrected?`<details open><summary>Your translation, corrected</summary><div class="src" style="margin-top:8px">${esc(A.corrected)}</div></details>`:""}
+  <p class="small" style="margin-top:10px">Marked by Claude (AI). An estimate, not a NAATI result.</p></div>`}
+let aiBusy={};
+async function aiMarkPractice(it){if(!window.AIM)return;aiBusy[it.key]=true;renderPractice();
+  try{if(!(await AIM.available()))throw new Error("unavailable");const A=await AIM.markTranslation({fr:it.fr,brief:{domain:it.dom||"General",topic:it.t||"",type:it.kind==="q"?"Short text":"Test-length passage",purpose:"Informative"},model:it.en,notes:it.notes||[],text:S.drafts[it.key]||""});
+    S.marks[it.key]=Object.assign(S.marks[it.key]||{},{ai:A,date:today()});save();haptic("win")}
+  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking isn't connected in the iPhone app yet":"Claude couldn't mark this right now")}
+  aiBusy[it.key]=false;renderPractice()}
+async function aiMarkRewrite(it){if(!window.AIM)return;aiBusy[it.key]=true;renderPractice();
+  try{if(!(await AIM.available()))throw new Error("unavailable");const R=await AIM.markRewrite({fr:it.fr,bad:it.bad,errs:it.errs,mine:S.drafts[it.key]??it.bad});S.marks[it.key]=Object.assign(S.marks[it.key]||{},{rw:R,date:today()});save()}
+  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking isn't connected in the iPhone app yet":"Claude couldn't mark this right now")}
+  aiBusy[it.key]=false;renderPractice()}
+function rwBlock(it,R){if(!R)return "";return `<div class="aimark"><div class="row between"><b>Claude's check</b><span class="ctv ${R.missed.length+R.introduced.length<=2?"pass":"fail"}">${R.fixed.length}/${it.errs.length} fixed</span></div>
+  ${R.missed.length?`<p class="small" style="margin:8px 0 4px"><b>Still wrong:</b></p><ul class="err">${R.missed.map(m=>{const e=it.errs.find(x=>x[0]===m);return `<li><span class="w">${esc(m)}</span>${e?` → <span class="r">${esc(e[1])}</span>`:""}</li>`}).join("")}</ul>`:""}
+  ${R.introduced.length?`<p class="small" style="margin:8px 0 4px"><b>New errors you introduced:</b></p><ul class="err">${R.introduced.map(x=>`<li><span class="w">${esc(x.quote)}</span> · ${esc(x.note)}</li>`).join("")}</ul>`:""}
+  ${R.advice?`<p style="margin:8px 0 0"><b>Work on:</b> ${esc(R.advice)}</p>`:""}<p class="small" style="margin-top:8px">Marked by Claude (AI). An estimate.</p></div>`}
 function renderPractice(){
   document.querySelectorAll("#pkind button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===pkind));
   const list=kindItems();if(pi>=list.length)pi=0;
@@ -393,16 +415,18 @@ function renderPractice(){
     $("pzone").innerHTML=head+seg+timer+`<div class="panel"><span class="eyebrow">French source</span><div class="src" style="margin-top:8px">${esc(it.fr)}</div>
     <p style="margin:16px 0 6px"><b>This translation has ${it.errs.length} errors.</b> Fix them below.</p>
     <textarea id="draft" aria-label="Your corrected translation" autocapitalize="sentences" spellcheck="false">${esc(draft)}</textarea>
-    <div class="row" style="margin-top:10px"><button class="btn" id="copy">Copy for marking</button><span class="small" id="copied"></span></div>
+    <div class="row" style="margin-top:10px"><button class="btn g" id="aiRw" ${aiBusy[it.key]?"disabled":""}>${aiBusy[it.key]?"Claude is checking…":"Check my corrections"}</button></div>
+    ${rwBlock(it,(S.marks[it.key]||{}).rw)}
     <details><summary>Show the ${it.errs.length} errors</summary><ol class="err">${it.errs.map(e=>`<li><span class="w">${esc(e[0])}</span> → <span class="r">${esc(e[1])}</span></li>`).join("")}</ol><div class="src">${esc(it.good)}</div></details></div>`;
     return}
   const draft=S.drafts[it.key]??"";const done=S.drafts["done_"+it.key];const mk=S.marks[it.key]||{};
   $("pzone").innerHTML=head+timer+`<div class="panel"><span class="eyebrow">Translate into English</span><div class="src" style="margin-top:8px">${esc(it.fr)}</div>
   <div class="row between" style="margin:16px 0 6px"><b>Your translation</b><span class="small" id="wc">${words(draft)} words · saved on this phone</span></div>
   <textarea id="draft" aria-label="Your translation" autocapitalize="sentences" spellcheck="false" placeholder="Write your English here. Spellcheck is off, like in the test.">${esc(draft)}</textarea>
-  <div class="row" style="margin-top:10px"><button class="btn ${done?"":"g"}" id="finish">${done?"Done ✓":"Finish and compare"}</button><button class="btn" id="copy">Copy for marking</button><span class="small" id="copied"></span></div>
+  <div class="row" style="margin-top:10px"><button class="btn ${done?"":"g"}" id="finish" ${aiBusy[it.key]?"disabled":""}>${aiBusy[it.key]?"Claude is marking…":done?(mk.ai?"Mark again":"Mark it"):"Finish and mark"}</button></div>
+  ${aiBusy[it.key]?`<div class="aimark" style="text-align:center"><div class="spin"></div><p class="small">Claude is checking every sentence against the source. About a minute.</p></div>`:aiBlock(mk.ai)}
   ${done?`<details open><summary>Compare with a model</summary><div class="cmp" style="margin-top:8px"><div><div class="eyebrow" style="margin-bottom:6px">Yours</div><div class="src">${esc(draft||"(empty)")}</div></div><div><div class="eyebrow" style="margin-bottom:6px">Model</div><div class="src">${esc(it.en)}</div></div></div><h3>Watch for</h3><ul style="margin:0;padding-left:20px">${it.notes.map(x=>`<li style="margin-bottom:5px">${esc(x)}</li>`).join("")}</ul></details>
-  <details open><summary>Mark yourself</summary><p class="small" style="margin:4px 0 8px">1 = many problems · 5 = no problems. Be strict: the test is.</p><div class="rub">${RUB.map(r=>`<div class="q"><span>${r[1]} <small>· ${r[2]}</small></span><div class="sc" data-k="${r[0]}">${[1,2,3,4,5].map(n=>`<button aria-pressed="${mk[r[0]]===n}" data-n="${n}">${n}</button>`).join("")}</div></div>`).join("")}</div>${S.times[it.key]?`<p class="small" style="margin-top:10px">Time used: ${fmt(S.times[it.key])}</p>`:""}</details>`
+  <details ${mk.ai?"":"open"}><summary>Mark yourself</summary><p class="small" style="margin:4px 0 8px">1 = many problems · 5 = no problems. Be strict: the test is.</p><div class="rub">${RUB.map(r=>`<div class="q"><span>${r[1]} <small>· ${r[2]}</small></span><div class="sc" data-k="${r[0]}">${[1,2,3,4,5].map(n=>`<button aria-pressed="${mk[r[0]]===n}" data-n="${n}">${n}</button>`).join("")}</div></div>`).join("")}</div>${S.times[it.key]?`<p class="small" style="margin-top:10px">Time used: ${fmt(S.times[it.key])}</p>`:""}</details>`
   :`<details><summary>Peek at the model</summary><p class="small">Better to finish first. The comparison and self-marking open when you tap Finish.</p><div class="src" style="margin-top:8px">${esc(it.en)}</div></details>`}
   <details><summary>Self-check before you finish</summary><ul style="margin:6px 0 0;padding-left:20px"><li>Nothing left out, nothing added</li><li>Every number, date and name copied exactly</li><li>No false friends (actuellement, éventuellement, important…)</li><li>Read it aloud: would an Australian have written it?</li><li>Spelling and capitals checked by eye</li></ul></details></div>
   <p class="small">Practice texts written for this app in the style of test passages. The model is one good version, not the only one.</p>`;
@@ -422,7 +446,8 @@ $("pzone").addEventListener("click",async e=>{
   if(id==="spotreset"){S.spot[it.key]={found:[],miss:[],complete:false};save();renderPractice();return}
   if(id==="tgo"){if(tick)stopTimer();else{endAt=Date.now()+left*1000;tick=setInterval(()=>{left=Math.max(0,Math.round((endAt-Date.now())/1000));const c=$("clock");if(c){c.textContent=fmt(left);c.classList.toggle("low",left<Math.min(300,DUR[pkind]/5))}if(!left){stopTimer();haptic("win");toast("Time's up");const b=$("tgo");if(b)b.textContent="Start"}},500)}e.target.textContent=tick?"Pause":"Start";haptic();return}
   if(id==="treset"){stopTimer();left=DUR[pkind];renderPractice();return}
-  if(id==="finish"){if(!S.drafts["done_"+it.key]){S.drafts["done_"+it.key]=true;S.times[it.key]=DUR[pkind]-left;stopTimer();const d=T();S.done[d].write=true;save();burst();haptic("win")}renderPractice();return}
+  if(id==="finish"){if(!S.drafts["done_"+it.key]){S.drafts["done_"+it.key]=true;S.times[it.key]=DUR[pkind]-left;stopTimer();const d=T();S.done[d].write=true;save()}aiMarkPractice(it);return}
+  if(id==="aiRw"){aiMarkRewrite(it);return}
   const sc=e.target.closest(".sc button");if(sc){const k=sc.parentElement.dataset.k;S.marks[it.key]=Object.assign(S.marks[it.key]||{},{[k]:+sc.dataset.n,date:today()});save();haptic();const y=$("main").scrollTop;renderPractice();$("main").scrollTop=y;return}
   if(id==="copy"){const txt=`Please mark my practice translation like a NAATI Certified Translator examiner (French into English). List every error by type (meaning, conventions, language, spelling), suggest the fix, and tell me if it would pass.\n\nFRENCH SOURCE:\n${it.fr}\n\nMY ENGLISH:\n${$("draft").value}`;
     const sh=P("Share");if(sh){try{await sh.share({title:"My translation",text:txt});return}catch(err){}}
