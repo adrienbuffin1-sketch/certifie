@@ -30,6 +30,16 @@ WORDS THAT COST MARKS
 • Spaced repetition brings each word back just before you'd forget it
 • Weak-words deck and a multiple-choice mode for quick sessions
 
+TEST TRACK: THE CERTIFIED TRANSLATOR TEST, SIMULATED
+• Full mock test: choose 2 of 3 general texts (news, government information, brochures, opinion pieces, notices), then a revision task, in 3.5 hours, like the real test
+• Each task comes with a brief table: domain, topic, text type, purpose, audience
+• Plain editor with word count and timer; spellcheck optional, autocorrect off
+• Revision drills: correct 14–18 seeded errors and categorise each one with NAATI's error categories; unnecessary changes count against you
+• Marking estimate against the CT rubric criteria (meaning transfer, textual norms and conventions, language proficiency, revision skills, error categorisation), with every error explained and a model translation
+• Personal error log: your top 5 recurring error types feed new cards and drills
+• Drill banks: false friends, small words that carry meaning, nouns to verbs, register
+• Progress: estimates over time, time per text, errors per 250 words and a readiness indicator
+
 GAMES THAT LEVEL UP
 • Speed: four answers, 8 seconds a word, stars for speed
 • Pairs: match French and English against the clock

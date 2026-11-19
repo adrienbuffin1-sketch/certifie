@@ -69,7 +69,7 @@ function exBlock(c,full){const x=EX[c[1]];if(!x)return "";return `<div class="ex
 document.addEventListener("click",e=>{const b=e.target.closest(".say");if(b){e.preventDefault();say(b.dataset.say)}});
 
 /* ---------- state ---------- */
-const BASE=()=>({box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0,mine:[],nread:{},ndraft:{},game:{best:{}}});
+const BASE=()=>({ct:{},box:{},next:{},done:{},log:{},steps:{},drafts:{},test:"",counts:{},spot:{},marks:{},times:{},set:{theme:"auto",haptic:true,remind:false,rtime:"19:00",newday:20},onb:false,ts:0,mine:[],nread:{},ndraft:{},game:{best:{}}});
 let S=BASE();
 function load(raw){try{const x=typeof raw==="string"?JSON.parse(raw):raw;if(x&&typeof x==="object"){const b=BASE();S=Object.assign(b,x);S.set=Object.assign(b.set,x.set||{});return true}}catch(e){}return false}
 try{load(localStorage.getItem(KEY))}catch(e){}
@@ -106,7 +106,7 @@ const TABS=[["today","Today",'<rect class="f" x="3.75" y="5" width="16.5" height
  ["cards","Words",'<rect x="3" y="7.25" width="13" height="13.25" rx="2.5"/><path class="f" d="M7 7.25V5.5A2.5 2.5 0 019.5 3h9A2.5 2.5 0 0121 5.5v9a2.5 2.5 0 01-2.5 2.5H16"/><path d="M6.5 12.25h6M6.5 15.75h4"/>'],
  ["grammar","Grammar",'<path class="f" d="M12 2.75l5.25 6.5L12 21.25 6.75 9.25z"/><path d="M12 9.25v6"/><circle cx="12" cy="9.6" r="1.35"/>'],
  ["read","Read",'<rect class="f" x="3" y="4.5" width="13.5" height="15.5" rx="2.25"/><path d="M16.5 8.75h2.75a1.25 1.25 0 011.25 1.25v7.75a2.25 2.25 0 01-4 1.4M6.5 8.5h6.5M6.5 12h6.5M6.5 15.5h4"/>'],
- ["practice","Practice",'<circle class="f" cx="12" cy="13.5" r="7.25"/><path d="M12 9.75v3.75l2.5 1.75M9.75 3h4.5M12 3v3.25M18.25 7l1.25-1.25"/>'],
+ ["practice","Work",'<rect class="f" x="3.25" y="7.5" width="17.5" height="12" rx="2.25"/><path d="M9 7.5V5.75A1.25 1.25 0 0110.25 4.5h3.5A1.25 1.25 0 0115 5.75V7.5M3.25 12.75h17.5"/>'],
  ["test","Test",'<circle class="f" cx="12" cy="9.5" r="6"/><path d="M8.6 14.4L7.25 21 12 18.75 16.75 21l-1.35-6.6"/><path d="M9.75 9.5l1.6 1.6 3-3.1"/>']];
 $("tabs").innerHTML=TABS.map(t=>`<button data-v="${t[0]}" aria-label="${t[1]}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg></span>${t[1]}</button>`).join("");
 let curView="today";
@@ -524,7 +524,9 @@ $("v-read").addEventListener("click",e=>{const t=e.target;let b;
 $("v-read").addEventListener("input",e=>{const t=e.target;if(t.classList.contains("ptr")){S.ndraft[t.dataset.d]=t.value;save()}else if(t.classList.contains("ltr"))RD.ltr[+t.dataset.i]=t.value});
 
 /* ---------- boot ---------- */
-function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar")renderGrammar();if(v==="practice")renderPractice();if(v==="test")renderSteps();updateBadge()}
+function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar"){renderGrammar();if(window.CTX)CTX.renderDrills()}if(v==="practice")renderPractice();if(v==="test"){renderSteps();if(window.CTX)CTX.renderTest()}updateBadge()}
+/* bridge for the Certified Translator module (ct.js) */
+window.CERT={get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
 applyTheme();
 show(location.hash.slice(1)||"today");
 maybeOnboard();

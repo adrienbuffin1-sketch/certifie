@@ -489,6 +489,67 @@ nav button .dot{top:3px;left:calc(50% + 10px);background:var(--gold);color:#1b14
 .src,.spot,.pfr,.exfr,.cfr,.pcell.L{font-family:Disp,Georgia,serif}
 .pfr{font-size:18px;line-height:1.55}
 .bsep{font:italic 500 15px Disp,serif}
+
+/* ===== Certified Translator test track ===== */
+.ctready{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--brand);color:#fff;border-radius:20px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.ctready .eyebrow{color:var(--foil)}
+.ctready b.serif{display:block;font-size:22px;margin:2px 0 4px}
+.ctready small{opacity:.8;font-size:12.5px}
+.ctdots{display:flex;gap:6px}.ctdots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--foil)}.ctdots i.on{background:var(--foil)}
+.ctgo{display:grid;gap:10px;margin-bottom:8px}
+.ctbig{text-align:left;display:grid;gap:3px;padding:15px 16px;border-radius:18px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+.ctbig b{font:600 19px Disp,Georgia,serif}.ctbig span{color:var(--mute);font-size:13.5px}
+.ctbig:first-child{border-color:var(--blue);background:var(--soft2)}
+.cttop{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.cttop:first-child{border-top:0}
+.cttop>div{flex:1}.cttop b{display:block}.cttop small{color:var(--mute);font-size:12.5px}
+.ctrank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font:700 13px Text,sans-serif;flex:none}
+.ctkpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.ctkpis b{display:block;font:600 26px Disp,Georgia,serif}.ctkpis small{color:var(--mute);font-size:12px}
+.ctchart{width:100%;height:auto;display:block}.ctchart polyline{fill:none;stroke:var(--blue);stroke-width:2}.ctchart circle.ok{fill:var(--green)}.ctchart circle.no{fill:var(--red)}.ctchart text{font:600 9px Text,sans-serif;fill:var(--mute)}.ctchart .passzone{fill:var(--green-soft)}
+.cthist{margin-top:10px}.cth{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.cth b{display:block;font-size:14.5px}.cth small{color:var(--mute);font-size:12px}
+.ctv{display:inline-block;font:700 12px Text,sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap;vertical-align:middle}
+.ctv.pass{background:var(--green-soft);color:var(--green)}.ctv.borderline{background:var(--amber-soft);color:#8a5a00}.ctv.fail{background:var(--red-soft);color:var(--red)}
+:root.dark .ctv.borderline{color:var(--gold)}
+.ctbar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 10px;box-shadow:0 -40px 0 var(--bg)}
+.ctbar b{font:600 20px Disp,Georgia,serif}
+.ct-clock{font:700 17px Text,sans-serif;font-variant-numeric:tabular-nums;background:var(--brand);color:#fff;padding:5px 12px;border-radius:999px}
+.ct-clock.low{background:var(--red)}
+.ctseg{margin-bottom:10px}
+.ctbrief{width:100%;border-collapse:collapse;margin:0 0 10px;font-size:13.5px;background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.ctbrief th{text-align:left;width:36%;background:var(--soft);font-weight:600;padding:7px 10px;vertical-align:top}.ctbrief td{padding:7px 10px;border-top:1px solid var(--line)}.ctbrief tr:first-child td{border-top:0}
+.ctbrief tr+tr th{border-top:1px solid var(--line)}
+.ctsrc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:0 0 10px}
+.ctsrc summary{font-weight:600;cursor:pointer;font-size:14.5px}
+.ctfr{font:400 17px/1.6 Disp,Georgia,serif;margin-top:8px}
+.ctlab{display:block;font-weight:600;font-size:14px;margin:4px 0 6px}
+.cted{width:100%;min-height:46vh;font:16px/1.6 Text,sans-serif;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);resize:vertical}
+.cted:focus{outline:2px solid var(--blue);outline-offset:1px}
+.ctfoot{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px;font-size:13px;color:var(--mute)}
+.ctnote{background:var(--soft2)}
+.ctopt{display:block;width:100%;text-align:left;border:2px solid var(--line);background:var(--card);border-radius:18px;padding:12px;margin:0 0 10px;cursor:pointer;color:var(--ink);position:relative}
+.ctopt.on{border-color:var(--blue);background:var(--soft2)}
+.ctsnip{font:600 16px Disp,Georgia,serif;margin:2px 0 4px}
+.ctsel{position:absolute;top:10px;right:12px;background:var(--blue);color:#fff;font:700 12px Text,sans-serif;padding:3px 9px;border-radius:999px}
+.ctcat select,.ctaddf select{width:100%;margin-top:8px;font:15px Text,sans-serif;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.ctdiff{display:grid;gap:4px;font-size:15px}.ctdiff del{color:var(--red);background:var(--red-soft);border-radius:6px;padding:2px 6px}.ctdiff ins{text-decoration:none;color:var(--green);background:var(--green-soft);border-radius:6px;padding:2px 6px}
+.ctflag{border-left:4px solid var(--red)}.ctflag.off{border-left-color:var(--line);opacity:.65}.ctflag.info{border-left-color:var(--gold)}
+.ctfh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.ctcat2{font:700 13px Text,sans-serif;color:var(--ink)}
+.ctsev{font:700 11px Text,sans-serif;padding:2px 8px;border-radius:999px;background:var(--soft)}.ctsev.major{background:var(--red-soft);color:var(--red)}
+.ctposs{color:var(--gold)}
+.ctq{margin:4px 0;font-size:15px;line-height:1.45}.ctq span{display:inline-block;min-width:62px;font:600 11.5px Text,sans-serif;color:var(--mute);margin-right:6px}.ctq.ok{color:var(--green)}
+.ctyn{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ctadd{margin:4px 0 12px}.ctadd summary{font-weight:600;color:var(--blue);cursor:pointer}.ctaddf{display:grid;gap:8px;margin-top:8px}
+.ctband{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.ctband:first-child{border-top:0}
+.ctband b{display:block;font-size:14.5px}.ctband small{color:var(--mute);font-size:12px}
+.bnum{font:700 14px Text,sans-serif;padding:5px 10px;border-radius:10px;white-space:nowrap}.ctband.ok .bnum{background:var(--green-soft);color:var(--green)}.ctband.no .bnum{background:var(--red-soft);color:var(--red)}
+.ctres{text-align:center}.ctres .ctv{font-size:15px;padding:7px 16px;margin:6px 0}
+.ctdis{margin:8px 0 0;font-style:italic}
+.cterr{padding:10px 0;border-top:1px solid var(--line)}.cterr:first-of-type{border-top:0}.cterr.good{opacity:.7}
+.ctbanks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ctbank{text-align:left;display:grid;gap:4px;padding:13px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;position:relative;box-shadow:var(--shadow)}
+.ctbank b{font:600 16px Disp,Georgia,serif}.ctbank span{font-size:12.5px;color:var(--mute);line-height:1.35}.ctbank small{font-weight:600;font-size:12px;color:var(--blue)}
+.ctbank.rec{border-color:var(--gold)}.ctrec{position:absolute;top:-9px;right:10px;background:var(--gold);color:#1b1404!important;font:700 10.5px Text,sans-serif!important;padding:2px 8px;border-radius:999px}
+.ctdq .cfr{font-size:19px;margin:10px 0 12px}
 </style>
 </head>
 <body>
@@ -541,6 +602,7 @@ nav button .dot{top:3px;left:calc(50% + 10px);background:var(--gold);color:#1b14
 <section class="view" id="v-grammar">
   <h2>Grammar traps</h2>
   <p class="sub">Where French speakers lose marks. Drill first, then check the rules.</p>
+  <div id="ctdrills"></div>
   <div class="panel" id="drill"></div>
   <h3>All rules <small id="rulecount"></small></h3>
   <input class="search" id="rulesearch" type="search" placeholder="Search rules" aria-label="Search rules">
@@ -555,28 +617,34 @@ nav button .dot{top:3px;left:calc(50% + 10px);background:var(--gold);color:#1b14
 </section>
 
 <section class="view" id="v-practice">
-  <h2>Timed practice</h2>
-  <p class="sub">Test conditions: no machine translation, no AI. Dictionary only.</p>
+  <h2>Work track</h2>
+  <p class="sub">Documents you will translate on the job: certificates, contracts, letters, manuals. For the test itself, use the Test tab.</p>
   <div class="seg" id="pkind"><button data-k="q" aria-pressed="true">10 min</button><button data-k="p" aria-pressed="false">1 hour</button><button data-k="r" aria-pressed="false">Revision</button></div>
   <div class="chips" id="ptabs"></div>
   <div id="pzone"></div>
 </section>
 
 <section class="view" id="v-test">
-  <h2>The test</h2>
-  <p class="sub">Certified Translator, French into English.</p>
+  <h2>Test track</h2>
+  <p class="sub">Certified Translator, French into English: general texts, test conditions.</p>
+  <div id="ctzone"></div>
+  <h3>About the test</h3>
   <div class="facts">
-    <div class="fact"><b>≈3.5 h</b><span>online, supervised by webcam</span></div>
-    <div class="fact"><b>2 of 3</b><span>texts to translate, ~250 words each</span></div>
-    <div class="fact"><b>1</b><span>revision of a ~250-word translation</span></div>
-    <div class="fact"><b>3</b><span>tasks, each from a different domain</span></div>
-    <div class="fact"><b>2+</b><span>examiners mark with a rubric</span></div>
+    <div class="fact"><b>3.5 h</b><span>for all three tasks, plus 15 min to set up</span></div>
+    <div class="fact"><b>2 of 3</b><span>texts to translate in full, ~250 words each</span></div>
+    <div class="fact"><b>14–18</b><span>errors to correct and categorise in the revision task</span></div>
+    <div class="fact"><b>3</b><span>tasks, each on a different topic and domain</span></div>
+    <div class="fact"><b>2+</b><span>examiners mark each task, Band 1 (best) to 5</span></div>
     <div class="fact"><b>$605</b><span>test fee per direction (2026–27)</span></div>
   </div>
+  <h3>How it is marked</h3>
+  <div class="panel"><p style="margin:0 0 8px"><b>Translation tasks:</b> Meaning transfer (pass: Band 2 or above), Application of textual norms and conventions (Band 3 or above), Language proficiency enabling meaning transfer (Band 2 or above).</p><p style="margin:0 0 8px"><b>Revision task:</b> Revision skills (Band 2 or above) and Error categorisation (Band 3 or above).</p><p style="margin:0">You must pass all three tasks. If you pass two, you can apply for a supplementary test of the one you failed.</p></div>
   <h3>Allowed and not allowed</h3>
-  <div class="panel"><p style="margin:0 0 8px"><span class="r">Allowed:</span> paper and offline dictionaries, and the online resources on NAATI's approved list.</p><p style="margin:0"><b style="color:var(--red)">Not allowed:</b> Google Translate, DeepL, AI tools, translation software, spellcheck.</p></div>
+  <div class="panel"><p style="margin:0 0 8px"><span class="r">Allowed:</span> hard-copy or offline dictionaries, glossaries and thesauri; NAATI's whitelist of online resources; the browser's basic spellcheck in translation tasks; pen and paper.</p><p style="margin:0"><b style="color:var(--red)">Not allowed:</b> machine translation, AI or translation tools, Microsoft Word, other grammar or spelling tools, a second screen.</p></div>
+  <h3>English spelling</h3>
+  <div class="panel"><p style="margin:0">NAATI accepts Australian, British, American or other English, as long as you use one variety consistently. If you mix them, examiners assess against Australian English (Macquarie Dictionary, Australian Government Style Manual). Certifié's models use Australian English.</p></div>
   <h3>The revision task</h3>
-  <div class="panel"><p style="margin:0">You get a French text and a weak English translation. Fix errors of meaning, grammar, conventions and register, and explain your changes. Don't rewrite for style: examiners are told to look for real errors, not preferences. Train it in <b>Practice → Revision</b>.</p></div>
+  <div class="panel"><p style="margin:0">You get a French text and an English translation with 14 to 18 errors of meaning transfer and language. Highlight each error, correct it and choose one category from NAATI's list (distortion, unjustified omission, unjustified addition, inappropriate register, unidiomatic expression, grammar/syntax, spelling, punctuation). Do not revise for style or personal preference. Train it above in <b>Revision drill</b>.</p></div>
   <h3>Formats cheat sheet</h3>
   <div class="scroll panel"><table>
     <thead><tr><th>French</th><th>English</th></tr></thead>
@@ -640,6 +708,11 @@ nav button .dot{top:3px;left:calc(50% + 10px);background:var(--gold);color:#1b14
 <script src="examples3.js"></script>
 <script src="examples4.js"></script>
 <script src="news.js"></script>
+<script src="ct1.js"></script>
+<script src="ct2.js"></script>
+<script src="ct3.js"></script>
+<script src="ct4.js"></script>
 <script src="app.js"></script>
+<script src="ct.js"></script>
 </body>
 </html>
