@@ -391,11 +391,11 @@ let aiBusy={};
 async function aiMarkPractice(it){if(!window.AIM)return;aiBusy[it.key]=true;renderPractice();
   try{if(!(await AIM.available()))throw new Error("unavailable");const A=await AIM.markTranslation({fr:it.fr,brief:{domain:it.dom||"General",topic:it.t||"",type:it.kind==="q"?"Short text":"Test-length passage",purpose:"Informative"},model:it.en,notes:it.notes||[],text:S.drafts[it.key]||""});
     S.marks[it.key]=Object.assign(S.marks[it.key]||{},{ai:A,date:today()});save();haptic("win")}
-  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking isn't connected in the iPhone app yet":"Claude couldn't mark this right now")}
+  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking works in the Claude version of Certifié":"Claude couldn't mark this right now")}
   aiBusy[it.key]=false;renderPractice()}
 async function aiMarkRewrite(it){if(!window.AIM)return;aiBusy[it.key]=true;renderPractice();
   try{if(!(await AIM.available()))throw new Error("unavailable");const R=await AIM.markRewrite({fr:it.fr,bad:it.bad,errs:it.errs,mine:S.drafts[it.key]??it.bad});S.marks[it.key]=Object.assign(S.marks[it.key]||{},{rw:R,date:today()});save()}
-  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking isn't connected in the iPhone app yet":"Claude couldn't mark this right now")}
+  catch(e){toast(window.AIM&&AIM.native&&!AIM.configured?"Automatic marking works in the Claude version of Certifié":"Claude couldn't mark this right now")}
   aiBusy[it.key]=false;renderPractice()}
 function rwBlock(it,R){if(!R)return "";return `<div class="aimark"><div class="row between"><b>Claude's check</b><span class="ctv ${R.missed.length+R.introduced.length<=2?"pass":"fail"}">${R.fixed.length}/${it.errs.length} fixed</span></div>
   ${R.missed.length?`<p class="small" style="margin:8px 0 4px"><b>Still wrong:</b></p><ul class="err">${R.missed.map(m=>{const e=it.errs.find(x=>x[0]===m);return `<li><span class="w">${esc(m)}</span>${e?` → <span class="r">${esc(e[1])}</span>`:""}</li>`}).join("")}</ul>`:""}
