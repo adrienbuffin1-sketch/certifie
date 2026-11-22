@@ -262,7 +262,7 @@ const GAMES=[
   icon:'<rect x="3" y="14" width="6" height="5" rx="1"/><rect x="10.5" y="14" width="5" height="5" rx="1"/><rect x="6.5" y="7.5" width="8" height="5" rx="1"/><path d="M17 16.5h4M19 14.5v4"/>'},
  {id:"blitz",name:"True or false",skill:"Fast recall",desc:"60 seconds. Is the translation right? Every 5 in a row raises the multiplier. Words come from sets you've unlocked.",
   icon:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.6M10 2.5h4"/>',endless:true},
- {id:"faux",name:"Faux amis",skill:"False friends",desc:"20 French words next to an English look-alike. Is it a faux ami or a vrai ami? The ones you miss come back first next time.",
+ {id:"faux",name:"Faux amis",skill:"False friends",desc:"A French word and three English meanings. One is a look-alike trap. Pick what the word really means. The ones you miss come back first next time.",
   icon:'<path d="M4.5 9h15M4.5 15h15M15.5 4.5l-7 15"/>',endless:true,wide:true}];
 const RANKS=(()=>{const T=[["Rookie",0],["Learner",300],["Word hunter",900],["Fluent player",2000],["Terminologist",3800],["Wordsmith",6500],["Master translator",10000],["Polyglot",14000],["Lexicographer",19000],["Grand master",25000],["Living dictionary",33000],["Legend",43000]];const o=[];T.forEach((t,i)=>{const b=i+1<T.length?T[i+1][1]:56000;for(let k=0;k<3;k++)o.push([t[0]+" "+ROMAN[k],k?Math.round((t[1]+(b-t[1])*k/3)/50)*50:t[1],i])});return o})();
 function gs(){S.game=S.game||{};const g=S.game;g.g=g.g||{};if(g.best&&!g.g.speed){g.g.speed={best:g.best};delete g.best}GAMES.forEach(x=>{g.g[x.id]=g.g[x.id]||{best:{}};g.g[x.id].best=g.g[x.id].best||{}});g.xp=g.xp||0;if(typeof g.ind!=="string")g.ind="";if(g.ind&&!SETS.some(st=>st.deck===g.ind))g.ind="";g.ffw=g.ffw||{};return g}
@@ -355,10 +355,12 @@ function bdNext(){G.q++;if(G.q>=G.cs.length){const n=G.res.length,sl=G.slips||0,
   return gFinish({m:sl<=3,st:sl>3?0:avg<=18000?3:avg<=32000?2:1,pts:Math.max(0,G.res.reduce((a,r)=>a+Math.round(200+600*Math.max(0,1-r.ms/60000)),0)-sl*60),line:[[sl,sl===1?"slip":"slips"],[(avg/1000).toFixed(0)+"s","avg per sentence"]],hint:sl>3?"Three slips at most to unlock the next set.":avg>18000?`Under ${avg>32000?"32":"18"}s a sentence for the next star.`:"Fluent.",miss:G.res.filter(r=>r.slips>1).map(r=>r.c)})}
   bdQ();renderGame()}
 /* faux amis */
-function fxStart(){const w=gs().ffw;const F=FFB.faux.slice().sort(()=>Math.random()-.5),V=FFB.vrai.slice().sort(()=>Math.random()-.5);const weak=F.filter(x=>w[x[0]]>0).slice(0,6);const fs=[...weak,...F.filter(x=>!weak.includes(x))].slice(0,14);
-  const qs=[...fs.map(x=>({fr:x[0],shown:x[1],real:x[2],note:x[3],faux:true})),...V.slice(0,6).map(x=>({fr:x[0],shown:x[1],real:x[1],note:"A true friend: same meaning in both languages.",faux:false}))].sort(()=>Math.random()-.5);
+function fxStart(){const w=gs().ffw;const F=FFB.faux.slice().sort(()=>Math.random()-.5),V=FFB.vrai.slice().sort(()=>Math.random()-.5);const weak=F.filter(x=>w[x[0]]>0).slice(0,6);const fs=[...weak,...F.filter(x=>!weak.includes(x))].slice(0,15);
+  const other=x=>{let o;do{o=FFB.faux[Math.random()*FFB.faux.length|0][2]}while(x.includes(o));return o};
+  const qs=[...fs.map(x=>{const o=[x[2],x[1]];o.push(other(o));return {fr:x[0],trap:x[1],real:x[2],note:x[3],faux:true,opts:o.sort(()=>Math.random()-.5)}}),
+    ...V.slice(0,5).map(x=>{const o=[x[1]];o.push(other(o));o.push(other(o));return {fr:x[0],trap:"",real:x[1],note:"Here the look-alike is right: same meaning in English.",faux:false,opts:o.sort(()=>Math.random()-.5)}})].sort(()=>Math.random()-.5);
   G={id:"faux",qs,q:0,pick:null,score:0,streak:0,best:0,right:0,miss:[],done:false,t0:performance.now()};renderGame()}
-function fxAnswer(saysFaux){if(!G||G.id!=="faux"||G.pick!==null)return;const q=G.qs[G.q];const ok=saysFaux===q.faux;G.pick=saysFaux;const w=gs().ffw;
+function fxAnswer(k){if(!G||G.id!=="faux"||G.pick!==null)return;const q=G.qs[G.q];const ok=q.opts[k]===q.real;G.pick=k;const w=gs().ffw;
   if(ok){G.right++;G.streak++;G.best=Math.max(G.best,G.streak);G.score+=10*Math.min(4,1+Math.floor((G.streak-1)/5));haptic("ok");if(q.faux&&w[q.fr])w[q.fr]--}else{G.streak=0;haptic("bad");G.miss.push(q);if(q.faux)w[q.fr]=(w[q.fr]||0)+2}
   const d=T();S.counts[d].drill++;renderGame()}
 function fxNext(){G.q++;G.pick=null;if(G.q<G.qs.length)return renderGame();const b=gs().g.faux;const was=b.hi||0;b.hi=Math.max(was,G.score);const st=G.right>=20?3:G.right>=17?2:G.right>=14?1:0;b.stars=Math.max(b.stars||0,st);const xp=Math.round(G.score/5);const rank=gAward(xp);
@@ -383,7 +385,7 @@ function renderGame(){const z=$("cardzone");gs();
       <div class="gstats">${s.line.map(l=>`<div><b>${l[0]}</b><small>${l[1]}</small></div>`).join("")}<div><b>${s.pts.toLocaleString()}</b><small>${s.record?"new best":"points"}</small></div></div>
       <div class="xpgain">+${s.xp} XP${s.rank?` · New rank: <b>${esc(s.rank)}</b>`:""}</div>
       <p class="small" style="margin:8px 0 0">${s.hint}</p></div>
-      ${s.ffmiss&&s.ffmiss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.ffmiss.map(q=>`<div class="gmiss"><div><b>${esc(q.fr)}</b> ${sayBtn(q.fr)}<span class="${q.faux?"ffno":"ffyes"}">${q.faux?"faux ami":"vrai ami"}</span></div><div class="en2">${esc(q.real)}</div><div class="small">${esc(q.note)}</div></div>`).join("")}</div>`:""}
+      ${s.ffmiss&&s.ffmiss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.ffmiss.map(q=>`<div class="gmiss"><div><b>${esc(q.fr)}</b> ${sayBtn(q.fr)}</div><div class="en2">${esc(q.real)}</div>${q.faux?`<div class="small">Not “${esc(q.trap)}”. ${esc(q.note)}</div>`:`<div class="small">${esc(q.note)}</div>`}</div>`).join("")}</div>`:""}
       ${s.miss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.miss.map(c=>`<div class="gmiss"><div><b>${esc(c[1])}</b> ${sayBtn(c[1])}</div><div class="en2">${esc(c[2])}</div>${exBlock(c,true)}</div>`).join("")}</div>`:""}
       <div class="ans"><button class="btn p" data-gs="${nextSet?nxs:(G.set||0)}" type="button">${nextSet?"Next set":"Play again"}</button><button class="btn" id="gback" type="button">${s.blitz?"All games":"All sets"}</button></div>`;return}
   const top=(lbl)=>`<div class="row between"><button class="linkbtn" id="gquit" type="button">Quit</button><span class="small">${lbl}</span><span class="small">${G.id==="blitz"?`<b id="bt">60s</b>`:G.id==="faux"?`${G.right} ✓`:G.id==="pairs"?`${G.slips} slip${G.slips===1?"":"s"}`:G.id==="memory"?`${G.moves} moves`:G.id==="build"?`${G.slips||0} slip${G.slips===1?"":"s"}`:G.res.filter(r=>r.ok).length+" ✓"}</span></div>`;
@@ -408,12 +410,12 @@ function renderGame(){const z=$("cardzone");gs();
     <div class="bline ${fin?"done":""}">${G.got.map(i=>`<span>${esc(G.toks[i])}</span>`).join(" ")}${fin?"":'<i class="caret"></i>'}</div>
     ${fin?`<p class="small" style="text-align:center;margin:10px 0 0"><b>${esc(c[1])}</b> = ${esc(c[2])}</p><button class="btn p wide" id="bdnext" type="button" style="margin-top:12px">${G.q+1<G.cs.length?"Next sentence":"See result"}</button>`:`<div class="btoks">${G.pool.map(i=>G.got.includes(i)?"":`<button class="btok ${G.bad===i?"bad shake":""}" data-bt="${i}" type="button">${esc(G.toks[i])}</button>`).join("")}</div>`}</div>`;
     if(fin){const nb=$("bdnext");if(nb)nb.focus({preventScroll:true})}return}
-  if(G.id==="faux"){const q=G.qs[G.q],a=G.pick!==null,ok=a&&G.pick===q.faux;
-    z.innerHTML=`<div class="gplay">${top(`${G.q+1}/20 · Score <b>${G.score}</b>`)}<div class="gtrack"><i style="transform:scaleX(${(G.q+(a?1:0))/G.qs.length})"></i></div>
-    <div class="bmult"><span class="${G.streak>=5?"hot":""}">×${Math.min(4,1+Math.floor(G.streak/5))}</span><small>${G.streak} in a row</small></div>
-    <div class="panel bcard ${a?(ok?"ok":"bad"):""}"><div class="gword serif" style="padding:8px 0 6px">${esc(q.fr)}</div><div class="bsep">looks like</div><div class="bshown">${esc(q.shown)}</div>
-    ${a?`<div class="fxres"><span class="${q.faux?"ffno":"ffyes"}">${q.faux?"Faux ami":"Vrai ami"}</span><div>It means <b>${esc(q.real)}</b></div><div class="small">${esc(q.note)}</div></div>`:""}</div>
-    ${a?`<button class="btn p wide" id="fxnext" type="button">${G.q+1<G.qs.length?"Next":"See result"}</button>`:`<div class="fxbtns"><button class="btn fxf" data-fx="1" type="button">Faux ami</button><button class="btn fxv" data-fx="0" type="button">Vrai ami</button></div>`}</div>`;
+  if(G.id==="faux"){const q=G.qs[G.q],a=G.pick!==null,ok=a&&q.opts[G.pick]===q.real;
+    z.innerHTML=`<div class="gplay">${top(`${G.q+1}/${G.qs.length} · Score <b>${G.score}</b>`)}<div class="gtrack"><i style="transform:scaleX(${(G.q+(a?1:0))/G.qs.length})"></i></div>
+    <div class="panel fxq"><div class="gword serif">${esc(q.fr)}</div><div class="small">What does it really mean?</div></div>
+    <div class="gopts fxopts">${q.opts.map((o,k)=>`<button class="gopt ${a?(o===q.real?"ok":k===G.pick?"bad":"dim"):""}" data-fx="${k}" type="button" ${a?"disabled":""}>${esc(o)}</button>`).join("")}</div>
+    ${a?`<div class="panel fxres ${ok?"ok":"bad"}"><b>${ok?"Right.":"Not quite."}</b> ${q.faux?`<span class="serif">${esc(q.fr)}</span> does <b>not</b> mean <span class="ffno">${esc(q.trap)}</span>. It means <b>${esc(q.real)}</b>.`:`<span class="serif">${esc(q.fr)}</span> means <b>${esc(q.real)}</b>, like in English.`}<div class="small">${esc(q.note)}</div></div>
+    <button class="btn p wide" id="fxnext" type="button">${G.q+1<G.qs.length?"Next":"See result"}</button>`:`<p class="small" style="text-align:center;margin-top:10px">Careful: the word that looks the most like the French is often the trap.</p>`}</div>`;
     if(a){const nb=$("fxnext");if(nb)nb.focus({preventScroll:true})}return}
   if(G.id==="speed"){const c=G.cs[G.q];
     z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}<div class="gtrack"><i id="gbar" style="transform:scaleX(${G.pick===null?1:Math.max(0,1-G.res[G.res.length-1].ms/GLIMIT)})"></i></div>${dots()}
@@ -443,7 +445,7 @@ $("cardzone").addEventListener("click",e=>{let b;
   if(b=e.target.closest("[data-gi]")){haptic();gs().ind=b.dataset.gi;save();renderGame();return}
   if(e.target.closest("#flipc")&&G&&G.id==="flip"&&!G.flip){haptic();G.flip=true;renderGame();return}
   if(b=e.target.closest("[data-fl]")){flAnswer(b.dataset.fl==="1");return}
-  if(b=e.target.closest("[data-fx]")){fxAnswer(b.dataset.fx==="1");return}
+  if(b=e.target.closest("[data-fx]")){fxAnswer(+b.dataset.fx);return}
   if(e.target.closest("#fxnext")){fxNext();return}
   if(e.target.closest("#bdnext")){bdNext();return}
   if(b=e.target.closest("[data-gh]")){haptic();GH=b.dataset.gh;renderGame();$("main").scrollTop=0;return}
