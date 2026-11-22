@@ -22,7 +22,10 @@ const STEPS=[
   "Pass, then set up your digital stamp and join AUSIT"
 ];
 const BOXDAYS=[0,1,3,7,16,35];
-const LEVELS=[["Beginner",0],["Apprentice",400],["Practitioner",1200],["Advanced",2600],["Test-ready",4200],["Certified level",6000]];
+const TIERS=[["Beginner",0],["Apprentice",400],["Practitioner",1200],["Advanced",2600],["Test-ready",4200],["Certified level",6000],["Professional",8500],["Senior translator",11500],["Specialist",15000],["Expert",19500],["Master translator",25000],["Legend",32000]];
+const TCOL=["#8a96a3","#2f8a74","#2a6fc9","#5b4fd0","#9a3fb8","#d4a52c","#d0612f","#c4365a","#1b8fa0","#3f9a3c","#b07a2a","#e7c982"];
+const ROMAN=["I","II","III","IV","V"];
+const LEVELS=(()=>{const o=[];TIERS.forEach((t,i)=>{const a=t[1],b=i+1<TIERS.length?TIERS[i+1][1]:40000;for(let k=0;k<5;k++)o.push([t[0]+" "+ROMAN[k],k?Math.round((a+(b-a)*k/5)/50)*50:a,i])});return o})();
 const KEY="naati-fr-en-v1";
 const today=()=>new Date().toLocaleDateString("en-CA");
 const addDays=(d,n)=>{const x=new Date(d+"T12:00:00");x.setDate(x.getDate()+n);return x.toLocaleDateString("en-CA")};
@@ -58,7 +61,9 @@ const DI={
  "Social services":'<path d="M12 19.5s-7.5-4.4-7.5-9.75A4.25 4.25 0 0112 7.1a4.25 4.25 0 017.5 2.65C19.5 15.1 12 19.5 12 19.5z"/>'
 };
 const DALIAS={Immigration:"Migration",Employment:"Work",Banking:"Money & tax",Transport:"Driving",Business:"Business letters"};
-const di=k=>{const p=DI[k]||DI[DALIAS[k]];return p?`<svg class="di" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`:""};
+const ICOL={"False friends":"#c8372d","Civil status & ID":"#2a5bd7","Migration":"#0e8a83","Education":"#6d45b8","Work":"#b86a14","Money & tax":"#2e8540","Housing":"#b5502e","Building & trades":"#c08a00","Insurance":"#2b77a8","Legal":"#8a2f52","Police":"#1d3f99","Health":"#cf3d63","Government":"#55667a","Driving":"#d9731a","Connectors":"#178f8f","Admin verbs":"#5a63c9","Contracts":"#8b5a2b","Manuals & products":"#5f8a1f","Business letters":"#9440a8","My words":"#c2185b","Weak words":"#c8372d"};
+const icol=k=>ICOL[k]||ICOL[DALIAS[k]]||"#152a63";
+const di=k=>{const p=DI[k]||DI[DALIAS[k]];return p?`<svg class="di" style="--ic:${icol(k)}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`:""};
 const CANSAY="speechSynthesis" in window;
 function say(t){if(!CANSAY)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="fr-FR";u.rate=.92;const v=speechSynthesis.getVoices().find(x=>/^fr(-|_)FR/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
 const SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11"/></svg>';
@@ -126,21 +131,38 @@ function stats(){const decks=[...new Set(CARDS.map(c=>c[0]))];const st={};decks.
   let drills=0,reviews=0;Object.values(S.counts).forEach(c=>{drills+=c.drill||0;reviews+=c.cards||0});
   const passages=Object.keys(S.drafts).filter(k=>k.startsWith("done_")&&S.drafts[k]).length;
   const spots=Object.values(S.spot).filter(x=>x&&x.complete).length;
-  const xp=L*2+K*6+M*10+drills*2+passages*60+spots*40+((S.game&&S.game.xp)||0);return {decks,st,L,K,M,drills,reviews,passages,spots,xp}}
+  const xp=L*2+K*6+M*10+drills*2+passages*60+spots*40+((S.game&&S.game.xp)||0)+(S.xpb||0)+((S.ct&&S.ct.hist)?S.ct.hist.length*80:0);return {decks,st,L,K,M,drills,reviews,passages,spots,xp}}
 function autoTicks(){const d=T();const c=S.counts[d];if(c.cards>=20)S.done[d].cards=true;if(c.drill>=5)S.done[d].drill=true}
 const dayComplete=d=>{const x=S.done[d]||{};return x.cards&&x.drill&&x.read};
 function streakOf(){let streak=0,x=today();if(!dayComplete(x))x=addDays(x,-1);while(dayComplete(x)){streak++;x=addDays(x,-1)}return streak}
 const dueCount=()=>CARDS.filter(isDue).length;
 
 /* ---------- today ---------- */
+/* ---------- subject of the day ---------- */
+const SOTDN=15;const FFB=window.NAATI_FF||{faux:[],vrai:[]};
+const hashD=d=>{let h=7;for(const ch of d)h=(h*31+ch.charCodeAt(0))>>>0;return h};
+function sotd(){const d=today();S.daily=S.daily||{};const x=S.daily[d];if(x&&x.deck)return x;const decks=[...new Set(CARDS.filter(c=>c[0]!==MYDECK).map(c=>c[0]))];const h=hashD(d);let deck=decks[h%decks.length];const y=S.daily[addDays(d,-1)];if(y&&y.deck===deck)deck=decks[(h+1)%decks.length];
+  Object.keys(S.daily).sort().slice(0,-40).forEach(k=>delete S.daily[k]);S.daily[d]={deck,n:0,done:false};return S.daily[d]}
+function sotdHit(c){if(!c)return;const x=sotd();if(c[0]!==x.deck||x.done)return;x.n++;if(x.n>=SOTDN){x.done=true;S.xpb=(S.xpb||0)+100;setTimeout(()=>{burst();haptic("win");toast("Subject of the day done · +100 XP")},200)}}
+function renderSotd(){const z=$("sotd");if(!z)return;const x=sotd();const cs=CARDS.filter(c=>c[0]===x.deck);const due=cs.filter(isDue).length,nw=cs.filter(isNew).length,kn=cs.filter(c=>(S.box[idOf(c)]||0)>=3).length;
+  const pick=cs.filter(c=>!isNew(c)).sort((a,b)=>(S.box[idOf(a)]||0)-(S.box[idOf(b)]||0)).slice(0,4);const show=(pick.length>=4?pick:pick.concat(cs.filter(isNew).slice(0,4-pick.length)));
+  const ff=FFB.faux[hashD(today()+"ff")%Math.max(1,FFB.faux.length)];
+  z.innerHTML=`<h3>Subject of the day <small>new subject at midnight</small></h3>
+  <div class="panel sotd" style="--ic:${icol(x.deck)}"><div class="sohead"><span class="soic">${di(x.deck)}</span><div style="min-width:0"><b class="serif">${esc(x.deck)}</b><small>${due} to review · ${nw} new · ${Math.round(kn/cs.length*100)}% known</small></div>${x.done?'<span class="sodone">Done</span>':""}</div>
+  <div class="sowords">${show.map(c=>`<div><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join("")}</div>
+  <div class="sobar"><i style="width:${Math.min(1,x.n/SOTDN)*100}%"></i></div><div class="small">${x.done?"All done. Keep going for extra practice.":`${Math.min(x.n,SOTDN)}/${SOTDN} words revised in this subject · +100 XP when done`}</div>
+  <div class="ans"><button class="btn p" id="sorev" type="button">Revise words</button><button class="btn" id="soplay" type="button">Play a game</button></div></div>
+  ${ff?`<div class="panel ffday"><div class="eyebrow">False friend of the day</div><div class="ffrow"><b class="serif">${esc(ff[0])}</b><span class="ffno">≠ ${esc(ff[1])}</span></div><div>It means <b>${esc(ff[2])}</b>. <span class="small">${esc(ff[3])}</span></div><button class="linkbtn" id="ffplay" type="button">Train false friends</button></div>`:""}`}
+document.addEventListener("click",e=>{const t=e.target.closest("#sorev,#soplay,#ffplay");if(!t)return;haptic();const x=sotd();gQuit();cur=null;quiz=null;chk=null;
+  if(t.id==="sorev"){cat=x.deck;mode="cards"}else{mode="game";G=null;if(t.id==="soplay"){gs().ind=x.deck;GH=null}else GH="faux";save()}show("cards");$("main").scrollTop=0});
 function renderToday(){autoTicks();const d=T();const done=S.done[d];const c=S.counts[d];
   $("todaydate").textContent=new Date().toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"});
   $("tasks").innerHTML=TASKS.map(t=>{const m=t[0]==="cards"?`${Math.min(c.cards,20)}/20`:t[0]==="drill"?`${Math.min(c.drill,5)}/5`:"";return `<label class="task"><input type="checkbox" data-t="${t[0]}" ${done[t[0]]?"checked":""}><span><b>${esc(t[1])}</b><small>${esc(t[2])}</small></span>${m?`<span class="meter">${m}</span>`:""}</label>`}).join("");
   const s=stats();const total=CARDS.length;const known=s.K+s.M;const pct=Math.round(known/total*100);
   let li=0;LEVELS.forEach((l,i)=>{if(s.xp>=l[1])li=i});const nxt=LEVELS[li+1];const into=nxt?(s.xp-LEVELS[li][1])/(nxt[1]-LEVELS[li][1]):1;
-  $("lvnum").textContent=`Level ${li+1} of ${LEVELS.length}`;$("lvname").textContent=LEVELS[li][0];$("hdr").textContent=LEVELS[li][0];
+  $("lvnum").textContent=`Level ${li+1} of ${LEVELS.length}`;$("lvname").innerHTML=`<i class="tdot" style="--tc:${TCOL[LEVELS[li][2]]}"></i>${esc(LEVELS[li][0])}`;$("hdr").textContent=TIERS[LEVELS[li][2]][0];
   $("xpbar").style.width=Math.round(into*100)+"%";$("xptext").textContent=nxt?`${s.xp.toLocaleString()} XP · ${(nxt[1]-s.xp).toLocaleString()} to ${nxt[0]}`:`${s.xp.toLocaleString()} XP · top level`;
-  $("ladder").innerHTML=LEVELS.map((l,i)=>`<span class="${i<=li?"on":""}" title="${l[0]}"></span>`).join("");
+  const ti=LEVELS[li][2];$("ladder").innerHTML=TIERS.map((t,i)=>`<span class="${i<=ti?"on":""}" style="--tc:${TCOL[i]}" title="${esc(t[0])}"></span>`).join("");renderSotd();
   const R=74,C=2*Math.PI*R,a1=s.M/total,a2=s.K/total,a3=s.L/total;
   const arc=(f,off,col)=>f>0?`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${col}" stroke-width="15" stroke-dasharray="${C*f} ${C}" stroke-dashoffset="${-C*off}" transform="rotate(-90 100 100)"/>`:"";
   let ticks="";for(let i=0;i<60;i++){const a=i*6*Math.PI/180,r2=i%5?88:84;ticks+=`<line x1="${(100+93*Math.sin(a)).toFixed(1)}" y1="${(100-93*Math.cos(a)).toFixed(1)}" x2="${(100+r2*Math.sin(a)).toFixed(1)}" y2="${(100-r2*Math.cos(a)).toFixed(1)}" stroke="rgba(231,201,130,.45)" stroke-width="1.3"/>`}
@@ -175,7 +197,7 @@ const newLeft=()=>{const d=T();return Math.max(0,(+S.set.newday||20)-(S.counts[d
 function queue(){const p=pool();const due=p.filter(isDue);if(due.length)return due;const nw=p.filter(isNew);if(nw.length&&newLeft()>0)return nw;return []}
 function pickCard(){const q=queue();const prev=cur;let c=q.length?q[Math.floor(Math.random()*q.length)]:null;if(c===prev&&q.length>1)c=q.find(x=>x!==prev);cur=c;extra=false;hint=false}
 function practiceCard(){const p=pool();cur=p.length?p[Math.floor(Math.random()*p.length)]:null;extra=true;hint=false}
-function record(ok){const k=idOf(cur);const wasNew=isNew(cur);let b=S.box[k]||0;b=ok?Math.min(b+1,5):0;S.box[k]=b;S.next[k]=addDays(today(),ok?(BOXDAYS[b]||1):0);const d=T();S.counts[d].cards++;if(wasNew)S.counts[d].newc=(S.counts[d].newc||0)+1;
+function record(ok){sotdHit(cur);const k=idOf(cur);const wasNew=isNew(cur);let b=S.box[k]||0;b=ok?Math.min(b+1,5):0;S.box[k]=b;S.next[k]=addDays(today(),ok?(BOXDAYS[b]||1):0);const d=T();S.counts[d].cards++;if(wasNew)S.counts[d].newc=(S.counts[d].newc||0)+1;
   if(S.counts[d].cards===20&&!S.done[d].cards){S.done[d].cards=true;setTimeout(()=>{burst();haptic("win");toast("20 cards done for today")},150)}save()}
 function renderCards(){syncMine();if(CATS.length!==2+new Set(CARDS.map(c=>c[0])).size)mkCats();
   $("cats").innerHTML=CATS.map(c=>{const n=c==="Weak words"?CARDS.filter(isWeak).length:c==="All"?null:CARDS.filter(x=>x[0]===c&&isDue(x)).length;return `<button class="chip" data-c="${esc(c)}" aria-pressed="${c===cat}">${di(c)}${esc(c)}${n?`<span class="n">${n}</span>`:""}</button>`}).join("");
@@ -208,7 +230,7 @@ function renderQuiz(){if(!quiz)newQuiz();if(!cur){$("cardzone").innerHTML=`<div 
 $("cardzone").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="retype"&&mode==="quiz"){e.preventDefault();$("qcheck")&&$("qcheck").click()}});
 $("cats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();cat=b.dataset.c;cur=null;quiz=null;chk=null;renderCards()});
 $("cmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;haptic();gQuit();mode=b.dataset.m;cur=null;chk=null;quiz=null;renderCards()});
-$("cardzone").addEventListener("submit",e=>{e.preventDefault();if(chk&&!chk.ok&&!chk.fixed){const r=$("retype");if(r&&!r.value.trim()){r.focus();return}if(r)tryRetype(chk,r.value);renderCards();return}if(chk){grade(chk.ok);return}const a=$("answer");if(!a.value.trim()){a.focus();return}chk=check(a.value);haptic(chk.ok?"ok":"bad");renderCards()});
+$("cardzone").addEventListener("submit",e=>{e.preventDefault();if(e.target.id==="gtform"){tSubmit();return}if(chk&&!chk.ok&&!chk.fixed){const r=$("retype");if(r&&!r.value.trim()){r.focus();return}if(r)tryRetype(chk,r.value);renderCards();return}if(chk){grade(chk.ok);return}const a=$("answer");if(!a.value.trim()){a.focus();return}chk=check(a.value);haptic(chk.ok?"ok":"bad");renderCards()});
 $("cardzone").addEventListener("click",e=>{
   if(e.target.id==="exhint"){hint=true;renderCards();const a=$("answer");if(a)a.focus({preventScroll:true});return}
   if(e.target.id==="skip"){chk={ok:false,typed:""};haptic("bad");renderCards();return}
@@ -230,45 +252,62 @@ const GAMES=[
   icon:'<rect x="3.5" y="4" width="7" height="7" rx="1.6"/><rect x="13.5" y="13" width="7" height="7" rx="1.6"/><path d="M10.5 7.5h3a3 3 0 013 3V13M13.5 16.5h-3a3 3 0 01-3-3V11"/>'},
  {id:"context",name:"In context",skill:"Usage",desc:"A real French sentence with a gap, the English underneath. Pick the missing word. All right unlocks the next set.",
   icon:'<path d="M4 7h16M4 12h5M15 12h5M4 17h11"/><rect x="9.5" y="10" width="5" height="4" rx="1"/>'},
+ {id:"flip",name:"Flashcards",skill:"Recall",desc:"Flip each card and say honestly if you knew it. Know all 10 to master the set. Speed earns stars.",
+  icon:'<rect x="4" y="6" width="13" height="14" rx="2"/><path d="M8 3.5h10a2 2 0 012 2V17"/>'},
+ {id:"type",name:"Type it",skill:"Spelling",desc:"A French word, you type the English. Small typos are forgiven. All 10 right unlocks the next set.",
+  icon:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h1M9.5 10h1M13 10h1M16.5 10h1M7.5 14h9"/>'},
+ {id:"memory",name:"Memory",skill:"Focus",desc:"16 face-down tiles. Find each French word and its English. Fewer moves earn stars.",
+  icon:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M15.5 17h3M17 15.5v3"/>'},
+ {id:"build",name:"Sentence builder",skill:"Translation",desc:"Read a French sentence and rebuild its English translation word by word. Three slips at most per set.",
+  icon:'<rect x="3" y="14" width="6" height="5" rx="1"/><rect x="10.5" y="14" width="5" height="5" rx="1"/><rect x="6.5" y="7.5" width="8" height="5" rx="1"/><path d="M17 16.5h4M19 14.5v4"/>'},
  {id:"blitz",name:"True or false",skill:"Fast recall",desc:"60 seconds. Is the translation right? Every 5 in a row raises the multiplier. Words come from sets you've unlocked.",
-  icon:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.6M10 2.5h4"/>',endless:true}];
-const RANKS=[["Rookie",0],["Learner",300],["Word hunter",900],["Fluent player",2000],["Terminologist",3800],["Wordsmith",6500],["Master translator",10000]];
-function gs(){S.game=S.game||{};const g=S.game;g.g=g.g||{};if(g.best&&!g.g.speed){g.g.speed={best:g.best};delete g.best}GAMES.forEach(x=>{g.g[x.id]=g.g[x.id]||{best:{}};g.g[x.id].best=g.g[x.id].best||{}});g.xp=g.xp||0;return g}
+  icon:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.6M10 2.5h4"/>',endless:true},
+ {id:"faux",name:"Faux amis",skill:"False friends",desc:"20 French words next to an English look-alike. Is it a faux ami or a vrai ami? The ones you miss come back first next time.",
+  icon:'<path d="M4.5 9h15M4.5 15h15M15.5 4.5l-7 15"/>',endless:true,wide:true}];
+const RANKS=(()=>{const T=[["Rookie",0],["Learner",300],["Word hunter",900],["Fluent player",2000],["Terminologist",3800],["Wordsmith",6500],["Master translator",10000],["Polyglot",14000],["Lexicographer",19000],["Grand master",25000],["Living dictionary",33000],["Legend",43000]];const o=[];T.forEach((t,i)=>{const b=i+1<T.length?T[i+1][1]:56000;for(let k=0;k<3;k++)o.push([t[0]+" "+ROMAN[k],k?Math.round((t[1]+(b-t[1])*k/3)/50)*50:t[1],i])});return o})();
+function gs(){S.game=S.game||{};const g=S.game;g.g=g.g||{};if(g.best&&!g.g.speed){g.g.speed={best:g.best};delete g.best}GAMES.forEach(x=>{g.g[x.id]=g.g[x.id]||{best:{}};g.g[x.id].best=g.g[x.id].best||{}});g.xp=g.xp||0;if(typeof g.ind!=="string")g.ind="";if(g.ind&&!SETS.some(st=>st.deck===g.ind))g.ind="";g.ffw=g.ffw||{};return g}
 const gsets=id=>id==="context"?SETS.map(st=>({...st,cards:st.cards.filter(c=>maskEx(c))})).filter(st=>st.cards.length>=4):SETS;
-let CSETS=null;const setsOf=id=>id==="context"?(CSETS=CSETS||gsets("context")):SETS;
+const bTok=c=>{const x=EX[c[1]];return x?x[1].trim().split(/\s+/):[]};
+let CSETS=null,BSETS=null;const setsOf=id=>id==="context"?(CSETS=CSETS||gsets("context")):id==="build"?(BSETS=BSETS||SETS.map(st=>({...st,cards:st.cards.filter(c=>{const n=bTok(c).length;return n>=4&&n<=14}).slice(0,5)})).filter(st=>st.cards.length>=3)):SETS;
+const gInd=()=>gs().ind||"";const inInd=st=>!gInd()||st.deck===gInd();
 const gBest=(id,i)=>gs().g[id].best[i];
 const gMastered=(id,i)=>{const b=gBest(id,i);return !!(b&&b.m)};
-const gOpen=(id,i)=>i===0||gMastered(id,i-1);
-const gNext=id=>setsOf(id).findIndex((_,i)=>!gMastered(id,i));
+const gOpen=(id,i)=>{const s=setsOf(id);return i===0||s[i-1].deck!==s[i].deck||gMastered(id,i-1)};
+const gNext=id=>setsOf(id).findIndex((st,i)=>inInd(st)&&!gMastered(id,i));
+const gNextAfter=(id,i)=>{const s=setsOf(id);for(let j=i+1;j<s.length;j++)if(inInd(s[j]))return j;return -1};
 const setName=s=>esc(s.deck)+(s.part?` ${s.part}/${s.of}`:"");
 const starRow=n=>`<span class="stars" aria-label="${n} of 3 stars">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
 const gIcon=g=>`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
 let GH=null,G=null,gRAF=0,gT=0;
 function gQuit(){cancelAnimationFrame(gRAF);clearTimeout(gT);G=null}
 function gMiss(c){const d=T();if(!isNew(c)){const id=idOf(c);S.box[id]=0;S.next[id]=today()}}
-function gCount(){const d=T();S.counts[d].cards++}
+function gCount(c){const d=T();S.counts[d].cards++;sotdHit(c)}
 function gOpts(c,field){const same=CARDS.filter(x=>x!==c&&x[0]===c[0]&&x[field]!==c[field]);const pool=same.length>=3?same:CARDS.filter(x=>x!==c&&x[field]!==c[field]);const o=[c];let g=0;while(o.length<4&&g++<300){const x=pool[Math.random()*pool.length|0];if(!o.some(y=>y[field]===x[field]))o.push(x)}return o.sort(()=>Math.random()-.5)}
 function gRank(){const xp=gs().xp;let i=0;RANKS.forEach((r,k)=>{if(xp>=r[1])i=k});const nx=RANKS[i+1];return {i,name:RANKS[i][0],xp,nx,pct:nx?(xp-RANKS[i][1])/(nx[1]-RANKS[i][1]):1}}
 function gAward(xp){const before=gRank().i;gs().xp+=xp;const after=gRank();return after.i>before?after.name:null}
 /* finish a set-based round */
-function gFinish(sum){const g=gs().g[G.id];const was=g.best[G.set]||{};const sets=setsOf(G.id);const unlock=sum.m&&!was.m&&G.set+1<sets.length;
+function gFinish(sum){const g=gs().g[G.id];const was=g.best[G.set]||{};const sets=setsOf(G.id);const unlock=sum.m&&!was.m&&gNextAfter(G.id,G.set)>=0;
   g.best[G.set]={m:was.m||sum.m,stars:Math.max(was.stars||0,sum.st),pts:Math.max(was.pts||0,sum.pts)};
   const xp=Math.round(sum.pts/20)+(sum.m&&!was.m?50:0)+(sum.st>(was.stars||0)?20*(sum.st-(was.stars||0)):0);const rank=gAward(xp);
   G.done=true;G.sum={...sum,unlock,xp,rank,record:sum.pts>(was.pts||0)&&!!was.pts};save();if(sum.m){burst();haptic("win")}renderGame()}
-function gStart(id,i){gQuit();const sets=setsOf(id);if(id==="blitz")return bStart();const cs=sets[i].cards.slice().sort(()=>Math.random()-.5);
+function gStart(id,i){gQuit();const sets=setsOf(id);if(id==="blitz")return bStart();if(id==="faux")return fxStart();const cs=sets[i].cards.slice().sort(()=>Math.random()-.5);
   G={id,set:i,cs,q:0,res:[],pick:null,done:false,t0:performance.now()};
   if(id==="speed"){G.opts=gOpts(cs[0],2);renderGame();sGo()}
   else if(id==="context"){G.opts=gOpts(cs[0],1);G.m=maskEx(cs[0]);renderGame()}
+  else if(id==="flip"){G.flip=false;renderGame()}
+  else if(id==="type"){G.typed=null;renderGame()}
+  else if(id==="memory"){G.cs=cs.slice(0,8);G.tiles=[...G.cs.map(c=>({c,s:"L"})),...G.cs.map(c=>({c,s:"R"}))].sort(()=>Math.random()-.5);G.open=[];G.gone=new Set();G.moves=0;G.seen=new Set();G.miss=new Set();renderGame()}
+  else if(id==="build"){bdQ();renderGame()}
   else if(id==="pairs"){G.boards=[cs.slice(0,Math.ceil(cs.length/2)),cs.slice(Math.ceil(cs.length/2))];G.b=0;G.slips=0;G.missed=new Set();pBoard();renderGame()}}
 /* speed */
 function sGo(){G.t0=performance.now();G.pick=null;cancelAnimationFrame(gRAF);const tick=()=>{if(!G||G.done||G.pick!==null||G.id!=="speed")return;const el=$("gbar");const left=1-(performance.now()-G.t0)/GLIMIT;if(el)el.style.transform=`scaleX(${Math.max(0,left)})`;if(left<=0){sAnswer(-1);return}gRAF=requestAnimationFrame(tick)};gRAF=requestAnimationFrame(tick)}
-function sAnswer(k){if(!G||G.pick!==null)return;const ms=Math.min(GLIMIT,performance.now()-G.t0);const c=G.cs[G.q];const ok=k>=0&&G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount();if(!ok)gMiss(c);
+function sAnswer(k){if(!G||G.pick!==null)return;const ms=Math.min(GLIMIT,performance.now()-G.t0);const c=G.cs[G.q];const ok=k>=0&&G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount(c);if(!ok)gMiss(c);
   renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(!G)return;G.q++;if(G.q>=G.cs.length){const n=G.res.length,ok=G.res.filter(r=>r.ok).length,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
     return gFinish({m:ok===n,st:ok<n?0:avg<=2500?3:avg<=4000?2:1,pts:G.res.reduce((a,r)=>a+(r.ok?Math.round(100+900*(1-r.ms/GLIMIT)):0),0),line:[[`${ok}/${n}`,"correct"],[(avg/1000).toFixed(1)+"s","avg per word"]],
       hint:ok<n?`Get all ${n} right to unlock the next set.`:avg>2500?`Under ${avg>4000?"4":"2.5"}s a word for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
     G.opts=gOpts(G.cs[G.q],2);G.pick=null;renderGame();sGo()},ok?420:1300)}
 /* context */
-function cAnswer(k){if(!G||G.pick!==null)return;const ms=performance.now()-G.t0;const c=G.cs[G.q];const ok=G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount();if(!ok)gMiss(c);renderGame()}
+function cAnswer(k){if(!G||G.pick!==null)return;const ms=performance.now()-G.t0;const c=G.cs[G.q];const ok=G.opts[k]===c;G.pick=k;G.res.push({c,ok,ms});haptic(ok?"ok":"bad");gCount(c);if(!ok)gMiss(c);renderGame()}
 function cNext(){G.q++;if(G.q>=G.cs.length){const n=G.res.length,ok=G.res.filter(r=>r.ok).length,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
     return gFinish({m:ok===n,st:ok<n?0:avg<=5000?3:avg<=9000?2:1,pts:G.res.reduce((a,r)=>a+(r.ok?Math.round(200+800*Math.max(0,1-r.ms/15000)):0),0),line:[[`${ok}/${n}`,"correct"],[(avg/1000).toFixed(1)+"s","avg per sentence"]],
       hint:ok<n?`Get all ${n} right to unlock the next set.`:avg>5000?`Under ${avg>9000?"9":"5"}s a sentence for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
@@ -277,51 +316,116 @@ function cNext(){G.q++;if(G.q>=G.cs.length){const n=G.res.length,ok=G.res.filter
 function pBoard(){const b=G.boards[G.b];G.L=b.slice().sort(()=>Math.random()-.5);G.R=b.slice().sort(()=>Math.random()-.5);G.gone=new Set();G.sel=null;G.bad=null}
 function pTap(side,i){if(!G||G.done)return;const c=(side==="L"?G.L:G.R)[i];if(G.gone.has(c))return;
   if(!G.sel||G.sel.side===side){G.sel={side,c};haptic();renderGame();return}
-  const a=G.sel.c;if(a===c){G.gone.add(c);G.sel=null;haptic("ok");gCount();if(G.gone.size===G.boards[G.b].length){if(G.b+1<G.boards.length){G.b++;clearTimeout(gT);gT=setTimeout(()=>{pBoard();renderGame()},350)}else{const ms=performance.now()-G.t0,n=G.cs.length;clearTimeout(gT);gT=setTimeout(()=>gFinish({m:G.slips<=1,st:G.slips>1?0:ms<=25000?3:ms<=45000?2:1,pts:Math.max(0,Math.round(n*100+Math.max(0,60000-ms)/30-G.slips*150)),line:[[(ms/1000).toFixed(0)+"s","time"],[G.slips,G.slips===1?"slip":"slips"]],hint:G.slips>1?"One slip at most to unlock the next set.":ms>25000?`Under ${ms>45000?"45":"25"}s for the next star.`:"Top speed.",miss:[...G.missed]}),350)}}renderGame();return}
+  const a=G.sel.c;if(a===c){G.gone.add(c);G.sel=null;haptic("ok");gCount(c);if(G.gone.size===G.boards[G.b].length){if(G.b+1<G.boards.length){G.b++;clearTimeout(gT);gT=setTimeout(()=>{pBoard();renderGame()},350)}else{const ms=performance.now()-G.t0,n=G.cs.length;clearTimeout(gT);gT=setTimeout(()=>gFinish({m:G.slips<=1,st:G.slips>1?0:ms<=25000?3:ms<=45000?2:1,pts:Math.max(0,Math.round(n*100+Math.max(0,60000-ms)/30-G.slips*150)),line:[[(ms/1000).toFixed(0)+"s","time"],[G.slips,G.slips===1?"slip":"slips"]],hint:G.slips>1?"One slip at most to unlock the next set.":ms>25000?`Under ${ms>45000?"45":"25"}s for the next star.`:"Top speed.",miss:[...G.missed]}),350)}}renderGame();return}
   G.slips++;const fr=side==="L"?c:a;G.missed.add(fr);gMiss(fr);haptic("bad");G.bad=[a,c];G.sel=null;renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(G){G.bad=null;renderGame()}},500)}
 /* blitz: 60 s true/false */
-function bPool(){const out=[];SETS.forEach((st,i)=>{if(GAMES.some(g=>!g.endless&&(gOpen(g.id,i)&&g.id!=="context")))out.push(...st.cards)});return out.length?out:SETS[0].cards}
+function bPool(){if(gInd())return CARDS.filter(c=>c[0]===gInd());const out=[];SETS.forEach((st,i)=>{if(GAMES.some(g=>!g.endless&&(gOpen(g.id,i)&&g.id!=="context")))out.push(...st.cards)});return out.length?out:SETS[0].cards}
 function bQ(){const pool=G.pool;const c=pool[Math.random()*pool.length|0];const truth=Math.random()<.5;let shown=c;if(!truth){const o=gOpts(c,2).filter(x=>x!==c);shown=o[0]||c}G.cur={c,shown,truth:shown===c};G.pick=null}
 function bStart(){G={id:"blitz",pool:bPool(),score:0,streak:0,best:0,right:0,wrong:0,miss:[],done:false,t0:performance.now()};bQ();renderGame();cancelAnimationFrame(gRAF);
   const tick=()=>{if(!G||G.id!=="blitz"||G.done)return;const left=1-(performance.now()-G.t0)/60000;const el=$("gbar");if(el)el.style.transform=`scaleX(${Math.max(0,left)})`;const t=$("bt");if(t)t.textContent=Math.ceil(Math.max(0,left)*60)+"s";if(left<=0)return bEnd();gRAF=requestAnimationFrame(tick)};gRAF=requestAnimationFrame(tick)}
 const bMult=()=>Math.min(4,1+Math.floor(G.streak/5));
-function bAnswer(yes){if(!G||G.done||G.pick!==null)return;const ok=yes===G.cur.truth;G.pick=yes;gCount();
+function bAnswer(yes){if(!G||G.done||G.pick!==null)return;const ok=yes===G.cur.truth;G.pick=yes;gCount(G.cur.c);
   if(ok){G.right++;G.score+=10*bMult();G.streak++;G.best=Math.max(G.best,G.streak);haptic(G.streak%5===0?"win":"ok")}else{G.wrong++;G.streak=0;haptic("bad");gMiss(G.cur.c);if(!G.miss.includes(G.cur.c))G.miss.push(G.cur.c)}
   renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(G&&!G.done){bQ();renderGame()}},ok?220:900)}
 function bEnd(){cancelAnimationFrame(gRAF);clearTimeout(gT);const b=gs().g.blitz;const was=b.hi||0;b.hi=Math.max(was,G.score);const st=G.right>=35?3:G.right>=25?2:G.right>=15?1:0;b.stars=Math.max(b.stars||0,st);
   const rank=gAward(Math.round(G.score/10));G.done=true;G.sum={blitz:true,st,pts:G.score,record:G.score>was&&was>0,first:!was,line:[[G.right,"right"],[G.wrong,"wrong"],["×"+Math.min(4,1+Math.floor(G.best/5)),"top multiplier"]],hint:st<3?`${[15,25,35][st]} right answers for the next star.`:"Three stars. Beat your score.",miss:G.miss,xp:Math.round(G.score/10),rank};save();if(st)burst();haptic("win");renderGame()}
+/* flashcards */
+function flAnswer(ok){if(!G||!G.flip)return;const c=G.cs[G.q];G.res.push({c,ok});haptic(ok?"ok":"bad");gCount(c);if(!ok)gMiss(c);G.q++;G.flip=false;
+  if(G.q>=G.cs.length){const n=G.cs.length,k=G.res.filter(r=>r.ok).length,ms=performance.now()-G.t0;return gFinish({m:k===n,st:k<n?0:ms<=45000?3:ms<=90000?2:1,pts:k*100+Math.max(0,Math.round((120000-ms)/60)),line:[[`${k}/${n}`,"knew it"],[(ms/1000).toFixed(0)+"s","time"]],hint:k<n?"Know all of them to unlock the next set.":ms>45000?`Under ${ms>90000?"90":"45"}s for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
+  renderGame()}
+/* type it */
+function gAnswers(en){const out=new Set();const full=en.replace(/\(.*?\)/g,"");out.add(norm(full));out.add(norm(en));full.split(/[\/;,]| or /).forEach(x=>{const t=norm(x);if(t)out.add(t)});return [...out].filter(Boolean)}
+function tSubmit(){if(!G||G.id!=="type")return;if(G.typed){return tNext()}const inp=$("gtin");const v=inp?inp.value:"";if(!v.trim()){inp&&inp.focus();return}const c=G.cs[G.q];const t=norm(v);const as=gAnswers(c[2]);const exact=as.includes(t);const close=!exact&&as.some(a=>lev(a,t)<=Math.max(1,Math.floor(a.length/7)));const ok=exact||close;
+  G.typed={v,ok,typo:close};G.res.push({c,ok,ms:performance.now()-G.t0});haptic(ok?"ok":"bad");gCount(c);if(!ok)gMiss(c);renderGame()}
+function tNext(){G.q++;G.typed=null;G.t0=performance.now();if(G.q>=G.cs.length){const n=G.res.length,k=G.res.filter(r=>r.ok).length,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
+  return gFinish({m:k===n,st:k<n?0:avg<=6000?3:avg<=10000?2:1,pts:G.res.reduce((a,r)=>a+(r.ok?Math.round(150+850*Math.max(0,1-r.ms/20000)):0),0),line:[[`${k}/${n}`,"correct"],[(avg/1000).toFixed(1)+"s","avg per word"]],hint:k<n?`Get all ${n} right to unlock the next set.`:avg>6000?`Under ${avg>10000?"10":"6"}s a word for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
+  renderGame()}
+/* memory */
+function mTap(k){if(!G||G.done||G.id!=="memory")return;const t=G.tiles[k];if(G.gone.has(t.c)||G.open.includes(k)||G.open.length>=2)return;G.open.push(k);haptic();
+  if(G.open.length===2){G.moves++;const [a,b]=G.open.map(i=>G.tiles[i]);if(a.c===b.c){G.gone.add(a.c);gCount(a.c);haptic("ok");clearTimeout(gT);gT=setTimeout(()=>{if(!G)return;G.open=[];if(G.gone.size===G.cs.length)return mEnd();renderGame()},380)}
+    else{[a,b].forEach(x=>{const key=x.s+idOf(x.c);if(G.seen.has(key))G.miss.add(x.c);G.seen.add(key)});haptic("bad");clearTimeout(gT);gT=setTimeout(()=>{if(G){G.open=[];renderGame()}},900)}}
+  renderGame()}
+function mEnd(){const n=G.cs.length,mv=G.moves,ms=performance.now()-G.t0;gFinish({m:true,st:mv<=n+4?3:mv<=n*2?2:1,pts:Math.max(100,n*150-(mv-n)*40+Math.max(0,Math.round((90000-ms)/90))),line:[[mv,"moves"],[(ms/1000).toFixed(0)+"s","time"]],hint:mv>n+4?`${mv>n*2?n*2:n+4} moves or fewer for the next star.`:"Perfect memory.",miss:[...G.miss]})}
+/* sentence builder */
+function bdQ(){const c=G.cs[G.q];G.toks=bTok(c);G.pool=G.toks.map((_,i)=>i).sort(()=>Math.random()-.5);G.got=[];G.qs=0;G.bad=null;G.qt0=performance.now()}
+function bdTap(i){if(!G||G.id!=="build"||G.got.length>=G.toks.length||G.got.includes(i))return;const want=G.toks[G.got.length];if(G.toks[i]===want){G.got.push(i);haptic("ok");
+    if(G.got.length===G.toks.length){const c=G.cs[G.q];G.res.push({c,ok:G.qs===0,ms:performance.now()-G.qt0,slips:G.qs});gCount(c);if(G.qs>1)gMiss(c)}}
+  else{G.qs++;G.slips=(G.slips||0)+1;G.bad=i;haptic("bad");clearTimeout(gT);gT=setTimeout(()=>{if(G){G.bad=null;renderGame()}},450)}renderGame()}
+function bdNext(){G.q++;if(G.q>=G.cs.length){const n=G.res.length,sl=G.slips||0,avg=G.res.reduce((a,r)=>a+r.ms,0)/n;
+  return gFinish({m:sl<=3,st:sl>3?0:avg<=18000?3:avg<=32000?2:1,pts:Math.max(0,G.res.reduce((a,r)=>a+Math.round(200+600*Math.max(0,1-r.ms/60000)),0)-sl*60),line:[[sl,sl===1?"slip":"slips"],[(avg/1000).toFixed(0)+"s","avg per sentence"]],hint:sl>3?"Three slips at most to unlock the next set.":avg>18000?`Under ${avg>32000?"32":"18"}s a sentence for the next star.`:"Fluent.",miss:G.res.filter(r=>r.slips>1).map(r=>r.c)})}
+  bdQ();renderGame()}
+/* faux amis */
+function fxStart(){const w=gs().ffw;const F=FFB.faux.slice().sort(()=>Math.random()-.5),V=FFB.vrai.slice().sort(()=>Math.random()-.5);const weak=F.filter(x=>w[x[0]]>0).slice(0,6);const fs=[...weak,...F.filter(x=>!weak.includes(x))].slice(0,14);
+  const qs=[...fs.map(x=>({fr:x[0],shown:x[1],real:x[2],note:x[3],faux:true})),...V.slice(0,6).map(x=>({fr:x[0],shown:x[1],real:x[1],note:"A true friend: same meaning in both languages.",faux:false}))].sort(()=>Math.random()-.5);
+  G={id:"faux",qs,q:0,pick:null,score:0,streak:0,best:0,right:0,miss:[],done:false,t0:performance.now()};renderGame()}
+function fxAnswer(saysFaux){if(!G||G.id!=="faux"||G.pick!==null)return;const q=G.qs[G.q];const ok=saysFaux===q.faux;G.pick=saysFaux;const w=gs().ffw;
+  if(ok){G.right++;G.streak++;G.best=Math.max(G.best,G.streak);G.score+=10*Math.min(4,1+Math.floor((G.streak-1)/5));haptic("ok");if(q.faux&&w[q.fr])w[q.fr]--}else{G.streak=0;haptic("bad");G.miss.push(q);if(q.faux)w[q.fr]=(w[q.fr]||0)+2}
+  const d=T();S.counts[d].drill++;renderGame()}
+function fxNext(){G.q++;G.pick=null;if(G.q<G.qs.length)return renderGame();const b=gs().g.faux;const was=b.hi||0;b.hi=Math.max(was,G.score);const st=G.right>=20?3:G.right>=17?2:G.right>=14?1:0;b.stars=Math.max(b.stars||0,st);const xp=Math.round(G.score/5);const rank=gAward(xp);
+  G.done=true;G.sum={blitz:true,st,pts:G.score,record:G.score>was&&was>0,first:!was,line:[[`${G.right}/20`,"right"],[G.best,"best streak"]],hint:st<3?`${[14,17,20][st]} right for the next star.`:"Perfect. No false friend fools you.",miss:[],ffmiss:G.miss,xp,rank};save();if(st)burst();haptic("win");renderGame()}
+const indBar=id=>{const decks=[...new Set(setsOf(id).map(st=>st.deck))];const cur=gInd();return `<div class="chips gind">${["",...decks].map(d=>`<button class="chip" data-gi="${esc(d)}" aria-pressed="${d===cur}">${d?di(d)+esc(d):"All industries"}</button>`).join("")}</div>`};
 function renderGame(){const z=$("cardzone");gs();
-  if(!G&&!GH){const r=gRank();const tot=GAMES.filter(g=>!g.endless).reduce((a,g)=>a+setsOf(g.id).filter((_,i)=>gMastered(g.id,i)).length,0);
-    z.innerHTML=`<div class="grank"><div class="gmed">${r.i+1}</div><div style="flex:1;min-width:0"><div class="eyebrow" style="color:var(--gold-soft)">Game rank</div><b class="serif">${r.name}</b><div class="gxp"><i style="width:${Math.round(r.pct*100)}%"></i></div><small>${r.xp.toLocaleString()} XP${r.nx?` · ${(r.nx[1]-r.xp).toLocaleString()} to ${r.nx[0]}`:""} · ${tot} sets mastered</small></div></div>
-    <div class="ggrid">${GAMES.map(g=>{const sets=setsOf(g.id);const n=g.endless?0:sets.filter((_,i)=>gMastered(g.id,i)).length;const b=gs().g[g.id];return `<button class="gcard" data-gh="${g.id}" type="button"><span class="gic">${gIcon(g)}</span><b>${g.name}</b><span class="small">${g.skill}</span><span class="gmeta">${g.endless?(b.hi?`Best ${b.hi}`:"Not played")+" "+starRow(b.stars||0):`Set ${Math.min(n+1,sets.length)} of ${sets.length}`}</span>${g.endless?"":`<span class="gmini"><i style="width:${n/sets.length*100}%"></i></span>`}</button>`}).join("")}</div>
+  if(!G&&!GH){const r=gRank();const tot=GAMES.filter(g=>!g.endless).reduce((a,g)=>a+setsOf(g.id).filter((_,i)=>gMastered(g.id,i)).length,0);const ind=gInd();
+    z.innerHTML=`<div class="grank"><div class="gmed">${r.i+1}</div><div style="flex:1;min-width:0"><div class="eyebrow" style="color:var(--gold-soft)">Game rank</div><b class="serif">${r.name}</b><div class="gxp"><i style="width:${Math.round(r.pct*100)}%"></i></div><small>${r.xp.toLocaleString()} XP${r.nx?` · ${(r.nx[1]-r.xp).toLocaleString()} to ${r.nx[0]}`:""} · ${tot} sets mastered · rank ${r.i+1} of ${RANKS.length}</small></div></div>
+    <div class="gindlab">Industry <small>${ind?"games use these words only":"pick one to focus your games"}</small></div>${indBar("speed")}
+    <div class="ggrid">${GAMES.map(g=>{const sets=setsOf(g.id).map((st,i)=>({st,i})).filter(x=>inInd(x.st)||g.id==="faux");const n=g.endless?0:sets.filter(x=>gMastered(g.id,x.i)).length;const b=gs().g[g.id];const meta=g.endless?(b.hi?`Best ${b.hi}`:"Not played")+" "+starRow(b.stars||0):sets.length?`Set ${Math.min(n+1,sets.length)} of ${sets.length}`:"No sets in this industry";return `<button class="gcard ${g.wide?"wide":""}" data-gh="${g.id}" type="button"><span class="gic">${gIcon(g)}</span><b>${g.name}</b><span class="small">${g.skill}</span><span class="gmeta">${meta}</span>${g.endless||!sets.length?"":`<span class="gmini"><i style="width:${n/sets.length*100}%"></i></span>`}</button>`}).join("")}</div>
     <p class="small" style="margin-top:12px">Missed words go back into your reviews, so the games feed your daily cards.</p>`;return}
   if(!G){const g=GAMES.find(x=>x.id===GH);const sets=setsOf(g.id);
-    if(g.endless){const b=gs().g.blitz;z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button><div class="panel" style="text-align:center"><span class="gic big">${gIcon(g)}</span><h2 class="serif" style="margin:10px 0 6px">${g.name}</h2><p class="small">${g.desc}</p>${starRow(b.stars||0)}<p class="small">${b.hi?`Your best: <b>${b.hi}</b>`:"No score yet"} · 1★ 15 right · 2★ 25 · 3★ 35</p><p class="small">${bPool().length} words in play. Unlock more sets in the other games to add words.</p><button class="btn p wide" data-gs="0" type="button">Start · 60 seconds</button></div>`;return}
-    const nxt=gNext(g.id);const n=sets.filter((_,i)=>gMastered(g.id,i)).length;
+    if(g.id==="faux"){const b=gs().g.faux;const weak=Object.values(gs().ffw).filter(v=>v>0).length;z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button><div class="panel" style="text-align:center"><span class="gic big ff">${gIcon(g)}</span><h2 class="serif" style="margin:10px 0 6px">${g.name}</h2><p class="small">${g.desc}</p>${starRow(b.stars||0)}<p class="small">${b.hi?`Your best: <b>${b.hi}</b>`:"No score yet"} · 1★ 14 right · 2★ 17 · 3★ 20</p><p class="small">${FFB.faux.length} false friends and ${FFB.vrai.length} true friends in the bank${weak?` · ${weak} to work on`:""}.</p><button class="btn p wide" data-gs="0" type="button">Start · 20 words</button></div>`;return}
+    if(g.endless){const b=gs().g.blitz;z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button><div class="panel" style="text-align:center"><span class="gic big">${gIcon(g)}</span><h2 class="serif" style="margin:10px 0 6px">${g.name}</h2><p class="small">${g.desc}</p>${starRow(b.stars||0)}<p class="small">${b.hi?`Your best: <b>${b.hi}</b>`:"No score yet"} · 1★ 15 right · 2★ 25 · 3★ 35</p><p class="small">${bPool().length} words in play${gInd()?` from ${esc(gInd())}`:". Unlock more sets in the other games to add words"}.</p><button class="btn p wide" data-gs="0" type="button">Start · 60 seconds</button></div>`;return}
+    const nxt=gNext(g.id);const vis=sets.map((st,i)=>({st,i})).filter(x=>inInd(x.st));const n=vis.filter(x=>gMastered(g.id,x.i)).length;
     z.innerHTML=`<button class="back" id="ghome" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>All games</button>
-    <div class="ghead"><div><b class="serif">${g.name}</b><span class="small">${g.desc}</span></div><div class="gprog"><b>${n}</b>/${sets.length}<small>mastered</small></div></div>
-    ${nxt>=0?`<button class="btn p wide" data-gs="${nxt}" style="margin-bottom:14px">${gBest(g.id,nxt)?"Retry":"Play"} set ${nxt+1} · ${setName(sets[nxt])}</button>`:`<p class="small">Every set mastered. Replay any set for three stars.</p>`}
-    <div class="gsets">${sets.map((st,i)=>{const b=gBest(g.id,i),open=gOpen(g.id,i);return `<button class="gset ${open?"":"locked"} ${b&&b.m?"m":""} ${i===nxt?"cur":""}" ${open?`data-gs="${i}"`:"disabled"} type="button"><span class="gn">${di(st.deck)}</span><span class="gd">${i+1}. ${setName(st)}</span>${open?(b&&b.m?starRow(b.stars):`<span class="small">${b?"Not yet":"New"}</span>`):'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/></svg>'}</button>`}).join("")}</div>`;return}
-  if(G.done){const s=G.sum,g=GAMES.find(x=>x.id===G.id),sets=setsOf(G.id);const nextSet=!s.blitz&&s.m&&G.set+1<sets.length;
-    z.innerHTML=`<div class="panel gend ${s.m||s.st?"win":""}"><div class="eyebrow">${g.name}${s.blitz?"":` · Set ${G.set+1} · ${setName(sets[G.set])}`}</div><h2 class="serif" style="margin:8px 0 6px">${s.blitz?(s.record?"New best!":s.first?"First score":"Time"):s.m?(s.unlock?`Mastered. Set ${G.set+2} unlocked`:"Mastered"):"So close"}</h2>${starRow(s.st)}
+    <div class="ghead"><div><b class="serif">${g.name}</b><span class="small">${g.desc}</span></div><div class="gprog"><b>${n}</b>/${vis.length}<small>mastered</small></div></div>${indBar(g.id)}
+    ${!vis.length?`<p class="small">This game has no sets for this industry yet. Pick another industry.</p>`:nxt>=0?`<button class="btn p wide" data-gs="${nxt}" style="margin-bottom:14px">${gBest(g.id,nxt)?"Retry":"Play"} ${setName(sets[nxt])}</button>`:`<p class="small">Every set mastered. Replay any set for three stars.</p>`}
+    <div class="gsets">${vis.map(({st,i})=>{const b=gBest(g.id,i),open=gOpen(g.id,i);return `<button style="--ic:${icol(st.deck)}" class="gset ${open?"":"locked"} ${b&&b.m?"m":""} ${i===nxt?"cur":""}" ${open?`data-gs="${i}"`:"disabled"} type="button"><span class="gn">${di(st.deck)}</span><span class="gd">${setName(st)}</span>${open?(b&&b.m?starRow(b.stars):`<span class="small">${b?"Not yet":"New"}</span>`):'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/></svg>'}</button>`}).join("")}</div>`;return}
+  if(G.done){const s=G.sum,g=GAMES.find(x=>x.id===G.id),sets=setsOf(G.id);const nxs=s.blitz?-1:gNextAfter(G.id,G.set);const nextSet=s.m&&nxs>=0;
+    z.innerHTML=`<div class="panel gend ${s.m||s.st?"win":""}"><div class="eyebrow">${g.name}${s.blitz?"":` · ${setName(sets[G.set])}`}</div><h2 class="serif" style="margin:8px 0 6px">${s.blitz?(s.record?"New best!":s.first?"First score":G.id==="faux"?"Round done":"Time"):s.m?(s.unlock?`Mastered. ${setName(sets[nxs])} unlocked`:"Mastered"):"So close"}</h2>${starRow(s.st)}
       <div class="gstats">${s.line.map(l=>`<div><b>${l[0]}</b><small>${l[1]}</small></div>`).join("")}<div><b>${s.pts.toLocaleString()}</b><small>${s.record?"new best":"points"}</small></div></div>
       <div class="xpgain">+${s.xp} XP${s.rank?` · New rank: <b>${esc(s.rank)}</b>`:""}</div>
       <p class="small" style="margin:8px 0 0">${s.hint}</p></div>
+      ${s.ffmiss&&s.ffmiss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.ffmiss.map(q=>`<div class="gmiss"><div><b>${esc(q.fr)}</b> ${sayBtn(q.fr)}<span class="${q.faux?"ffno":"ffyes"}">${q.faux?"faux ami":"vrai ami"}</span></div><div class="en2">${esc(q.real)}</div><div class="small">${esc(q.note)}</div></div>`).join("")}</div>`:""}
       ${s.miss.length?`<div class="panel"><h3 style="margin-bottom:6px">To learn</h3>${s.miss.map(c=>`<div class="gmiss"><div><b>${esc(c[1])}</b> ${sayBtn(c[1])}</div><div class="en2">${esc(c[2])}</div>${exBlock(c,true)}</div>`).join("")}</div>`:""}
-      <div class="ans"><button class="btn p" data-gs="${nextSet?G.set+1:(G.set||0)}" type="button">${nextSet?"Next set":"Play again"}</button><button class="btn" id="gback" type="button">${s.blitz?"All games":"All sets"}</button></div>`;return}
-  const top=(lbl)=>`<div class="row between"><button class="linkbtn" id="gquit" type="button">Quit</button><span class="small">${lbl}</span><span class="small">${G.id==="blitz"?`<b id="bt">60s</b>`:G.id==="pairs"?`${G.slips} slip${G.slips===1?"":"s"}`:G.res.filter(r=>r.ok).length+" ✓"}</span></div>`;
-  const dots=()=>`<div class="gdots">${G.cs.map((_,i)=>{const r=G.res[i];return `<i class="${r?(r.ok?"ok":"bad"):i===G.q?"now":""}"></i>`}).join("")}</div>`;
+      <div class="ans"><button class="btn p" data-gs="${nextSet?nxs:(G.set||0)}" type="button">${nextSet?"Next set":"Play again"}</button><button class="btn" id="gback" type="button">${s.blitz?"All games":"All sets"}</button></div>`;return}
+  const top=(lbl)=>`<div class="row between"><button class="linkbtn" id="gquit" type="button">Quit</button><span class="small">${lbl}</span><span class="small">${G.id==="blitz"?`<b id="bt">60s</b>`:G.id==="faux"?`${G.right} ✓`:G.id==="pairs"?`${G.slips} slip${G.slips===1?"":"s"}`:G.id==="memory"?`${G.moves} moves`:G.id==="build"?`${G.slips||0} slip${G.slips===1?"":"s"}`:G.res.filter(r=>r.ok).length+" ✓"}</span></div>`;
+  const dots=()=>`<div class="gdots">${(G.cs||[]).map((_,i)=>{const r=G.res[i];return `<i class="${r?(r.ok?"ok":"bad"):i===G.q?"now":""}"></i>`}).join("")}</div>`;
+  if(G.id==="flip"){const c=G.cs[G.q];
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}${dots()}
+    <button class="panel flipc ${G.flip?"on":""}" id="flipc" type="button" style="--ic:${icol(c[0])}"><span class="tag">${di(c[0])}${esc(c[0])}</span><span class="gword serif">${esc(c[1])}</span>${G.flip?`<span class="flen">${esc(c[2])}</span>${c[3]?`<span class="small">${esc(c[3])}</span>`:""}`:`<span class="small">Say it in English, then tap to check</span>`}</button>
+    ${G.flip?`${exBlock(c,true)}<div class="ans"><button class="btn" data-fl="0" type="button">Didn't know</button><button class="btn p" data-fl="1" type="button">Knew it</button></div>`:""}</div>`;return}
+  if(G.id==="type"){const c=G.cs[G.q],t=G.typed;
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}${dots()}
+    <div class="gword serif">${esc(c[1])}</div><form id="gtform" autocomplete="off"><input id="gtin" class="gtin ${t?(t.ok?"ok":"bad"):""}" placeholder="Type the English" autocapitalize="off" autocorrect="off" spellcheck="false" value="${t?esc(t.v):""}" ${t?"readonly":""}>
+    ${t?`<p class="small" style="text-align:center;margin:10px 0 0">${t.ok?(t.typo?`Close enough. Spelling: <b>${esc(c[2])}</b>`:`<b>${esc(c[2])}</b>`):`Answer: <b>${esc(c[2])}</b>`}</p>`:""}
+    <button class="btn p wide" type="submit" style="margin-top:12px">${t?(G.q+1<G.cs.length?"Next":"See result"):"Check"}</button></form></div>`;
+    const f=t?z.querySelector("#gtform button"):$("gtin");if(f)f.focus({preventScroll:true});return}
+  if(G.id==="memory"){
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.gone.size}/${G.cs.length} pairs`)}<div class="gtrack"><i style="transform:scaleX(${G.gone.size/G.cs.length})"></i></div>
+    <div class="mgrid">${G.tiles.map((t,k)=>{const up=G.open.includes(k)||G.gone.has(t.c);return `<button class="mtile ${up?"up":""} ${G.gone.has(t.c)?"gone":""} ${t.s}" style="--ic:${icol(t.c[0])}" data-mt="${k}" type="button" ${G.gone.has(t.c)?"disabled":""}>${up?esc(t.s==="L"?t.c[1]:t.c[2]):""}</button>`}).join("")}</div>
+    <p class="small" style="text-align:center;margin-top:10px">French tiles are dark, English tiles are coloured</p></div>`;return}
+  if(G.id==="build"){const c=G.cs[G.q],fin=G.got.length===G.toks.length;
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}${dots()}
+    <div class="panel csent"><p class="cfr">${hl(EX[c[1]][0],c[1])}</p>${sayBtn(EX[c[1]][0],"Listen")}</div>
+    <div class="bline ${fin?"done":""}">${G.got.map(i=>`<span>${esc(G.toks[i])}</span>`).join(" ")}${fin?"":'<i class="caret"></i>'}</div>
+    ${fin?`<p class="small" style="text-align:center;margin:10px 0 0"><b>${esc(c[1])}</b> = ${esc(c[2])}</p><button class="btn p wide" id="bdnext" type="button" style="margin-top:12px">${G.q+1<G.cs.length?"Next sentence":"See result"}</button>`:`<div class="btoks">${G.pool.map(i=>G.got.includes(i)?"":`<button class="btok ${G.bad===i?"bad shake":""}" data-bt="${i}" type="button">${esc(G.toks[i])}</button>`).join("")}</div>`}</div>`;
+    if(fin){const nb=$("bdnext");if(nb)nb.focus({preventScroll:true})}return}
+  if(G.id==="faux"){const q=G.qs[G.q],a=G.pick!==null,ok=a&&G.pick===q.faux;
+    z.innerHTML=`<div class="gplay">${top(`${G.q+1}/20 · Score <b>${G.score}</b>`)}<div class="gtrack"><i style="transform:scaleX(${(G.q+(a?1:0))/G.qs.length})"></i></div>
+    <div class="bmult"><span class="${G.streak>=5?"hot":""}">×${Math.min(4,1+Math.floor(G.streak/5))}</span><small>${G.streak} in a row</small></div>
+    <div class="panel bcard ${a?(ok?"ok":"bad"):""}"><div class="gword serif" style="padding:8px 0 6px">${esc(q.fr)}</div><div class="bsep">looks like</div><div class="bshown">${esc(q.shown)}</div>
+    ${a?`<div class="fxres"><span class="${q.faux?"ffno":"ffyes"}">${q.faux?"Faux ami":"Vrai ami"}</span><div>It means <b>${esc(q.real)}</b></div><div class="small">${esc(q.note)}</div></div>`:""}</div>
+    ${a?`<button class="btn p wide" id="fxnext" type="button">${G.q+1<G.qs.length?"Next":"See result"}</button>`:`<div class="fxbtns"><button class="btn fxf" data-fx="1" type="button">Faux ami</button><button class="btn fxv" data-fx="0" type="button">Vrai ami</button></div>`}</div>`;
+    if(a){const nb=$("fxnext");if(nb)nb.focus({preventScroll:true})}return}
   if(G.id==="speed"){const c=G.cs[G.q];
-    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · ${G.q+1}/${G.cs.length}`)}<div class="gtrack"><i id="gbar" style="transform:scaleX(${G.pick===null?1:Math.max(0,1-G.res[G.res.length-1].ms/GLIMIT)})"></i></div>${dots()}
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}<div class="gtrack"><i id="gbar" style="transform:scaleX(${G.pick===null?1:Math.max(0,1-G.res[G.res.length-1].ms/GLIMIT)})"></i></div>${dots()}
     <div class="gword serif">${esc(c[1])}</div><div class="gopts">${G.opts.map((o,k)=>`<button class="gopt ${G.pick!==null?(o===c?"ok":k===G.pick?"bad":"dim"):""}" data-gk="${k}" type="button" ${G.pick!==null?"disabled":""}>${esc(o[2])}</button>`).join("")}</div>${G.pick===-1?`<p class="small" style="text-align:center;color:var(--red)">Time's up</p>`:""}</div>`;return}
   if(G.id==="context"){const c=G.cs[G.q],m=G.m;const ans=G.pick!==null;
-    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · ${G.q+1}/${G.cs.length}`)}${dots()}
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · ${G.q+1}/${G.cs.length}`)}${dots()}
     <div class="panel csent"><p class="cfr">${ans?hl(EX[c[1]][0],c[1]):m.fr}</p><p class="cen">${esc(m.en)}</p>${ans?sayBtn(EX[c[1]][0],"Listen"):""}</div>
     <div class="gopts two">${G.opts.map((o,k)=>`<button class="gopt ${ans?(o===c?"ok":k===G.pick?"bad":"dim"):""}" data-ck="${k}" type="button" ${ans?"disabled":""}>${esc(o[1])}</button>`).join("")}</div>
     ${ans?`<p class="small" style="text-align:center;margin:12px 0 0"><b>${esc(c[1])}</b> = ${esc(c[2])}</p><button class="btn p wide" id="cnext" type="button" style="margin-top:12px">${G.q+1<G.cs.length?"Next":"See result"}</button>`:""}</div>`;
     if(ans){const nb=$("cnext");if(nb)nb.focus({preventScroll:true})}return}
   if(G.id==="pairs"){const cell=(side,arr)=>arr.map((c,i)=>{const gone=G.gone.has(c),sel=G.sel&&G.sel.side===side&&G.sel.c===c,bad=G.bad&&G.bad.includes(c);return `<button class="pcell ${side} ${gone?"gone":""} ${sel?"sel":""} ${bad?"bad shake":""}" data-p="${side}${i}" type="button" ${gone?"disabled":""}>${esc(side==="L"?c[1]:c[2])}</button>`}).join("");
-    z.innerHTML=`<div class="gplay">${top(`Set ${G.set+1} · board ${G.b+1}/${G.boards.length}`)}<div class="gtrack"><i style="transform:scaleX(${(G.b*G.boards[0].length+G.gone.size)/G.cs.length})"></i></div>
+    z.innerHTML=`<div class="gplay">${top(`${setName(setsOf(G.id)[G.set])} · board ${G.b+1}/${G.boards.length}`)}<div class="gtrack"><i style="transform:scaleX(${(G.b*G.boards[0].length+G.gone.size)/G.cs.length})"></i></div>
     <p class="small" style="text-align:center;margin:4px 0 10px">Tap a French word, then its English</p><div class="pgrid"><div>${cell("L",G.L)}</div><div>${cell("R",G.R)}</div></div></div>`;return}
   if(G.id==="blitz"){const q=G.cur,a=G.pick!==null,ok=a&&G.pick===q.truth;
     z.innerHTML=`<div class="gplay">${top(`Score <b>${G.score}</b>`)}<div class="gtrack"><i id="gbar"></i></div>
@@ -332,14 +436,22 @@ function renderGame(){const z=$("cardzone");gs();
 $("cardzone").addEventListener("pointerdown",e=>{if(!G||G.done)return;let b;
   if((b=e.target.closest("[data-gk]"))&&G.pick===null){e.preventDefault();sAnswer(+b.dataset.gk)}
   else if((b=e.target.closest("[data-b]"))){e.preventDefault();bAnswer(b.dataset.b==="1")}
-  else if((b=e.target.closest("[data-p]"))){e.preventDefault();pTap(b.dataset.p[0],+b.dataset.p.slice(1))}});
+  else if((b=e.target.closest("[data-p]"))){e.preventDefault();pTap(b.dataset.p[0],+b.dataset.p.slice(1))}
+  else if((b=e.target.closest("[data-mt]"))){e.preventDefault();mTap(+b.dataset.mt)}
+  else if((b=e.target.closest("[data-bt]"))){e.preventDefault();bdTap(+b.dataset.bt)}});
 $("cardzone").addEventListener("click",e=>{let b;
+  if(b=e.target.closest("[data-gi]")){haptic();gs().ind=b.dataset.gi;save();renderGame();return}
+  if(e.target.closest("#flipc")&&G&&G.id==="flip"&&!G.flip){haptic();G.flip=true;renderGame();return}
+  if(b=e.target.closest("[data-fl]")){flAnswer(b.dataset.fl==="1");return}
+  if(b=e.target.closest("[data-fx]")){fxAnswer(b.dataset.fx==="1");return}
+  if(e.target.closest("#fxnext")){fxNext();return}
+  if(e.target.closest("#bdnext")){bdNext();return}
   if(b=e.target.closest("[data-gh]")){haptic();GH=b.dataset.gh;renderGame();$("main").scrollTop=0;return}
   if(b=e.target.closest("[data-gs]")){haptic();gStart(GH||G&&G.id,+b.dataset.gs);$("main").scrollTop=0;return}
   if(b=e.target.closest("[data-ck]")){cAnswer(+b.dataset.ck);return}
   if(e.target.closest("#cnext")){cNext();return}
   if(e.target.closest("#ghome")){GH=null;renderGame();return}
-  if(e.target.closest("#gquit")||e.target.closest("#gback")){if(G)GH=G.id;gQuit();if(GH==="blitz"&&e.target.closest("#gback"))GH=null;renderGame();return}});
+  if(e.target.closest("#gquit")||e.target.closest("#gback")){if(G)GH=G.id;gQuit();if((GH==="blitz"||GH==="faux")&&e.target.closest("#gback"))GH=null;renderGame();return}});
 window.addEventListener("keydown",e=>{if(!G||G.done||curView!=="cards"||mode!=="game")return;if(G.id==="blitz"&&(e.key==="ArrowLeft"||e.key==="ArrowRight")){bAnswer(e.key==="ArrowRight")}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.done){const id=G.id;gQuit();GH=id;if(curView==="cards"&&mode==="game")renderGame()}});
 
