@@ -471,9 +471,9 @@ $("drill").addEventListener("click",e=>{const o=e.target.closest(".opt");if(o&&d
 
 /* ---------- practice ---------- */
 const RUB=[["meaning","Meaning","Nothing added, missed or distorted"],["norms","Conventions","Dates, numbers, names, layout, terms of address"],["lang","English","Grammar, idiom, register: reads like it was written in English"],["tech","Accuracy","Spelling, punctuation, capitals, copied figures"]];
-const DUR={q:600,p:3600,r:3000};
+const DUR={s:0,q:600,p:3600,r:3000};
 const ITEMS=[...QUICK.map((p,i)=>({kind:"q",key:"q"+i,...p})),...PASSAGES.map((p,i)=>({kind:"p",key:"p"+i,...p})),...REVS.map((r,i)=>({kind:"r",key:"r"+i,...r}))];
-let pkind="q",pi=0,left=600,tick=null,endAt=0,rmode="spot";
+let pkind="s",pi=0,left=600,tick=null,endAt=0,rmode="spot";
 const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
 const words=t=>(t.trim().match(/\S+/g)||[]).length;
 const kindItems=()=>ITEMS.filter(x=>x.kind===pkind);
@@ -517,6 +517,7 @@ function rwBlock(it,R){if(!R)return "";return `<div class="aimark"><div class="r
   ${R.advice?`<p style="margin:8px 0 0"><b>Work on:</b> ${esc(R.advice)}</p>`:""}<p class="small" style="margin-top:8px">Marked by Claude (AI). An estimate.</p></div>`}
 function renderPractice(){
   document.querySelectorAll("#pkind button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===pkind));
+  if(pkind==="s"){$("ptabs").innerHTML="";if(window.TRX)TRX.render($("pzone"));return}
   const list=kindItems();if(pi>=list.length)pi=0;
   $("ptabs").innerHTML=list.map((t,i)=>{const done=t.kind==="p"?S.drafts["done_"+t.key]:(S.spot[t.key]||{}).complete;return `<button class="chip" data-p="${i}" aria-pressed="${i===pi}">${done?"✓ ":""}${esc(t.t.replace(/^Revision \d+: /,""))}</button>`}).join("");
   const it=list[pi];const isRev=it.kind==="r";
@@ -665,7 +666,7 @@ $("v-read").addEventListener("input",e=>{const t=e.target;if(t.classList.contain
 /* ---------- boot ---------- */
 function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar"){renderGrammar();if(window.CTX)CTX.renderDrills()}if(v==="practice")renderPractice();if(v==="test"){renderSteps();if(window.CTX)CTX.renderTest()}updateBadge()}
 /* bridge for the Certified Translator module (ct.js) */
-window.CERT={get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
+window.CERT={icol,hl,get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
 applyTheme();
 show(location.hash.slice(1)||"today");
 maybeOnboard();

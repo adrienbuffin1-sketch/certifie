@@ -126,5 +126,21 @@ CANDIDATE'S CORRECTED VERSION
 ${o.mine}`;
   const j=await ask(SYS_W,user,2500);return {fixed:j.fixed||[],missed:j.missed||[],introduced:(j.introduced||[]).map(x=>({quote:String(x.quote||""),note:String(x.explanation||"")})),band:clampB(j.band),advice:String(j.advice||""),at:Date.now()}}
 
-window.AIM={available,markTranslation,judgeRevision,markRewrite,get native(){return NATIVE},get configured(){return !!AI_URL}};
+const SYS_S=`You are a NAATI Certified Translator examiner giving quick feedback on a practice translation of a short French passage into English. ${RUBRIC}
+Judge the candidate's English against the French source. The reference translation is only one acceptable version: accept any accurate, natural rendering. Use Australian or British spelling as consistent.
+Error types: Distortion, Unjustified omission, Unjustified addition, Inappropriate register, Unidiomatic expression, Error of grammar/syntax, Error of spelling, Error of punctuation.
+Answer with ONLY JSON: {"score":0-10,"verdict":"max 12 words","errors":[{"quote":"exact words from the candidate","type":"one error type","fix":"better wording","why":"max 18 words"}],"better":"the candidate's translation with only the errors fixed","tip":"one practical tip, max 20 words"}
+Score: 10 = test-quality, 8-9 = minor slips, 6-7 = meaning kept but clumsy or one real error, 3-5 = a meaning error, 0-2 = largely wrong. Empty errors list if none.`;
+async function markSentence(o){
+  const user=`FRENCH SOURCE${o.ctx?` (from: ${o.ctx})`:""}
+${o.fr}
+
+REFERENCE TRANSLATION
+${o.model}
+
+CANDIDATE'S TRANSLATION
+${o.mine}`;
+  const j=await ask(SYS_S,user,1800);const sc=Math.max(0,Math.min(10,Math.round(+j.score||0)));
+  return {score:sc,verdict:String(j.verdict||""),errors:(j.errors||[]).map(e=>({quote:String(e.quote||""),type:String(e.type||""),fix:String(e.fix||""),why:String(e.why||"")})),better:String(j.better||""),tip:String(j.tip||""),ai:true}}
+window.AIM={available,markTranslation,judgeRevision,markRewrite,markSentence,get native(){return NATIVE},get configured(){return !!AI_URL}};
 })();

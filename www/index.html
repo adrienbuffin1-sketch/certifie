@@ -619,6 +619,20 @@ h3:has(.ctv){display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .fxopts{grid-template-columns:1fr}
 .fxres{display:block;margin-top:12px;line-height:1.5}.fxres.ok{border-color:var(--green)}.fxres.bad{border-color:var(--red)}.fxres .small{margin-top:4px}
 .fxres .ffno{background:none;padding:0;color:#c8372d;font:inherit;font-weight:600;text-decoration:line-through}
+.trlv{margin-bottom:4px}.trtp .chip{font-size:13px;min-height:36px;padding:6px 12px}
+.trsrc{border-left:4px solid var(--ic)}
+.trctx{display:flex;gap:7px;align-items:center;font:600 12.5px Text,sans-serif;color:var(--mute);margin-bottom:8px}.trctx .di{width:16px;height:16px;flex:none}.trctx i{font-weight:500}
+.trfr{font:19px/1.5 Disp,Georgia,serif;margin:0 0 10px}
+.trterms{display:grid;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}.trterms b{font-weight:600}
+textarea.trin{min-height:110px;margin-bottom:12px}
+.trres{border-left:4px solid var(--line)}.trres.good{border-left-color:var(--green)}.trres.mid{border-left-color:var(--gold)}.trres.low{border-left-color:var(--red)}
+.trres>div:first-child,.trsc{display:inline-flex}
+.trsc{align-items:baseline;gap:2px;float:right;margin-left:10px}.trsc b{font:600 32px Disp,Georgia,serif;line-height:1}.trsc small{color:var(--mute)}
+.trres .xpgain{margin-left:8px;vertical-align:1px}
+.trmodel,.trbetter{margin:0;padding:10px 12px;border-radius:12px;background:var(--soft);line-height:1.5}
+.trbetter{background:color-mix(in srgb,var(--green) 9%,var(--card))}
+.trerr{margin:10px 0 0}
+.trself{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.trself .btn{font-size:13.5px;padding:10px 6px;min-height:48px}
 </style>
 </head>
 <body>
@@ -689,7 +703,7 @@ h3:has(.ctv){display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 <section class="view" id="v-practice">
   <h2>Work track</h2>
   <p class="sub">Documents you will translate on the job: certificates, contracts, letters, manuals. For the test itself, use the Test tab.</p>
-  <div class="seg" id="pkind"><button data-k="q" aria-pressed="true">10 min</button><button data-k="p" aria-pressed="false">1 hour</button><button data-k="r" aria-pressed="false">Revision</button></div>
+  <div class="seg" id="pkind"><button data-k="s" aria-pressed="true">Sentences</button><button data-k="q" aria-pressed="false">10 min</button><button data-k="p" aria-pressed="false">1 hour</button><button data-k="r" aria-pressed="false">Revision</button></div>
   <div class="chips" id="ptabs"></div>
   <div id="pzone"></div>
 </section>
@@ -785,6 +799,7 @@ h3:has(.ctv){display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 <script src="ff.js"></script>
 <script src="app.js"></script>
 <script src="ai.js"></script>
+<script src="tr.js"></script>
 <script src="ct.js"></script>
 </body>
 </html>
