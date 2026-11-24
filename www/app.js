@@ -62,6 +62,8 @@ const DI={
 };
 const DALIAS={Immigration:"Migration",Employment:"Work",Banking:"Money & tax",Transport:"Driving",Business:"Business letters"};
 const ICOL={"False friends":"#c8372d","Civil status & ID":"#2a5bd7","Migration":"#0e8a83","Education":"#6d45b8","Work":"#b86a14","Money & tax":"#2e8540","Housing":"#b5502e","Building & trades":"#c08a00","Insurance":"#2b77a8","Legal":"#8a2f52","Police":"#1d3f99","Health":"#cf3d63","Government":"#55667a","Driving":"#d9731a","Connectors":"#178f8f","Admin verbs":"#5a63c9","Contracts":"#8b5a2b","Manuals & products":"#5f8a1f","Business letters":"#9440a8","My words":"#c2185b","Weak words":"#c8372d"};
+const ARTF={"False friends":"g_faux","Civil status & ID":"civil","Migration":"migration","Education":"education","Work":"work","Money & tax":"money","Housing":"housing","Building & trades":"building","Insurance":"insurance","Legal":"legal","Police":"police","Health":"health","Government":"government","Driving":"driving","Connectors":"connectors","Admin verbs":"adminverbs","Contracts":"contracts","Manuals & products":"manuals","Business letters":"letters","My words":"mywords","Weak words":"weak","My errors":"weak"};
+const art=(k,cls="")=>{const f=ARTF[k]||ARTF[DALIAS[k]]||(/^[a-z_]+$/.test(k)?k:"");return f?`<img class="art ${cls}" src="img/art/${f}.webp" alt="" loading="lazy" decoding="async">`:""};
 const icol=k=>ICOL[k]||ICOL[DALIAS[k]]||"#152a63";
 const di=k=>{const p=DI[k]||DI[DALIAS[k]];return p?`<svg class="di" style="--ic:${icol(k)}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`:""};
 const CANSAY="speechSynthesis" in window;
@@ -148,7 +150,7 @@ function renderSotd(){const z=$("sotd");if(!z)return;const x=sotd();const cs=CAR
   const pick=cs.filter(c=>!isNew(c)).sort((a,b)=>(S.box[idOf(a)]||0)-(S.box[idOf(b)]||0)).slice(0,4);const show=(pick.length>=4?pick:pick.concat(cs.filter(isNew).slice(0,4-pick.length)));
   const ff=FFB.faux[hashD(today()+"ff")%Math.max(1,FFB.faux.length)];
   z.innerHTML=`<h3>Subject of the day <small>new subject at midnight</small></h3>
-  <div class="panel sotd" style="--ic:${icol(x.deck)}"><div class="sohead"><span class="soic">${di(x.deck)}</span><div style="min-width:0"><b class="serif">${esc(x.deck)}</b><small>${due} to review · ${nw} new · ${Math.round(kn/cs.length*100)}% known</small></div>${x.done?'<span class="sodone">Done</span>':""}</div>
+  <div class="panel sotd" style="--ic:${icol(x.deck)}"><div class="sohead"><span class="soic">${art(x.deck)||di(x.deck)}</span><div style="min-width:0"><b class="serif">${esc(x.deck)}</b><small>${due} to review · ${nw} new · ${Math.round(kn/cs.length*100)}% known</small></div>${x.done?'<span class="sodone">Done</span>':""}</div>
   <div class="sowords">${show.map(c=>`<div><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join("")}</div>
   <div class="sobar"><i style="width:${Math.min(1,x.n/SOTDN)*100}%"></i></div><div class="small">${x.done?"All done. Keep going for extra practice.":`${Math.min(x.n,SOTDN)}/${SOTDN} words revised in this subject · +100 XP when done`}</div>
   <div class="ans"><button class="btn p" id="sorev" type="button">Revise words</button><button class="btn" id="soplay" type="button">Play a game</button></div></div>
@@ -171,8 +173,8 @@ function renderToday(){autoTicks();const d=T();const done=S.done[d];const c=S.co
   const due=dueCount();const nl=newLeft();
   $("gostudy").innerHTML=due||nl?`<svg viewBox="0 0 24 24"><path d="M7 4.5l11 7.5-11 7.5z"/></svg>${due?`Review ${due} word${due===1?"":"s"}`:`Learn ${nl} new words`}`:`<svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7"/></svg>Words done · do a timed passage`;
   const streak=streakOf();
-  $("kpis").innerHTML=`<div class="kpi gold"><b>${streak}</b><span>day streak</span></div><div class="kpi"><b>${known}</b><span>of ${total} words known</span></div><div class="kpi"><b>${s.passages}</b><span>passages done</span></div><div class="kpi"><b>${s.spots}</b><span>revisions done</span></div>`;
-  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${di(k)}${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
+  $("kpis").innerHTML=`<div class="kpi gold">${art("streak","kart")}<b>${streak}</b><span>day streak</span></div><div class="kpi">${art("mywords","kart")}<b>${known}</b><span>of ${total} words known</span></div><div class="kpi">${art("write","kart")}<b>${s.passages}</b><span>passages done</span></div><div class="kpi">${art("stamp","kart")}<b>${s.spots}</b><span>revisions done</span></div>`;
+  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${art(k,"dk")||di(k)}${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
   const mk=Object.entries(S.marks).filter(([k,v])=>v&&v.date).sort((a,b)=>a[1].date<b[1].date?-1:1);
   if(mk.length){const avg=v=>{const xs=RUB.map(r=>v[r[0]]).filter(Boolean);return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:0};const last=mk.slice(-6);
     const per=RUB.map(r=>{const xs=mk.map(([k,v])=>v[r[0]]).filter(Boolean).slice(-5);return [r[1],xs.length?(xs.reduce((a,b)=>a+b,0)/xs.length):0]});
@@ -277,7 +279,7 @@ const gNext=id=>setsOf(id).findIndex((st,i)=>inInd(st)&&!gMastered(id,i));
 const gNextAfter=(id,i)=>{const s=setsOf(id);for(let j=i+1;j<s.length;j++)if(inInd(s[j]))return j;return -1};
 const setName=s=>esc(s.deck)+(s.part?` ${s.part}/${s.of}`:"");
 const starRow=n=>`<span class="stars" aria-label="${n} of 3 stars">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
-const gIcon=g=>`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
+const gIcon=g=>art("g_"+g.id)||`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
 let GH=null,G=null,gRAF=0,gT=0;
 function gQuit(){cancelAnimationFrame(gRAF);clearTimeout(gT);G=null}
 function gMiss(c){const d=T();if(!isNew(c)){const id=idOf(c);S.box[id]=0;S.next[id]=today()}}
@@ -286,7 +288,7 @@ function gOpts(c,field){const same=CARDS.filter(x=>x!==c&&x[0]===c[0]&&x[field]!
 function gRank(){const xp=gs().xp;let i=0;RANKS.forEach((r,k)=>{if(xp>=r[1])i=k});const nx=RANKS[i+1];return {i,name:RANKS[i][0],xp,nx,pct:nx?(xp-RANKS[i][1])/(nx[1]-RANKS[i][1]):1}}
 function gAward(xp){const before=gRank().i;gs().xp+=xp;const after=gRank();return after.i>before?after.name:null}
 /* finish a set-based round */
-function gFinish(sum){const g=gs().g[G.id];const was=g.best[G.set]||{};const sets=setsOf(G.id);const unlock=sum.m&&!was.m&&gNextAfter(G.id,G.set)>=0;
+function gFinish(sum){setTimeout(()=>window.ADS&&ADS.brk("game"),1400);const g=gs().g[G.id];const was=g.best[G.set]||{};const sets=setsOf(G.id);const unlock=sum.m&&!was.m&&gNextAfter(G.id,G.set)>=0;
   g.best[G.set]={m:was.m||sum.m,stars:Math.max(was.stars||0,sum.st),pts:Math.max(was.pts||0,sum.pts)};
   const xp=Math.round(sum.pts/20)+(sum.m&&!was.m?50:0)+(sum.st>(was.stars||0)?20*(sum.st-(was.stars||0)):0);const rank=gAward(xp);
   G.done=true;G.sum={...sum,unlock,xp,rank,record:sum.pts>(was.pts||0)&&!!was.pts};save();if(sum.m){burst();haptic("win")}renderGame()}
@@ -328,7 +330,7 @@ function bAnswer(yes){if(!G||G.done||G.pick!==null)return;const ok=yes===G.cur.t
   if(ok){G.right++;G.score+=10*bMult();G.streak++;G.best=Math.max(G.best,G.streak);haptic(G.streak%5===0?"win":"ok")}else{G.wrong++;G.streak=0;haptic("bad");gMiss(G.cur.c);if(!G.miss.includes(G.cur.c))G.miss.push(G.cur.c)}
   renderGame();clearTimeout(gT);gT=setTimeout(()=>{if(G&&!G.done){bQ();renderGame()}},ok?220:900)}
 function bEnd(){cancelAnimationFrame(gRAF);clearTimeout(gT);const b=gs().g.blitz;const was=b.hi||0;b.hi=Math.max(was,G.score);const st=G.right>=35?3:G.right>=25?2:G.right>=15?1:0;b.stars=Math.max(b.stars||0,st);
-  const rank=gAward(Math.round(G.score/10));G.done=true;G.sum={blitz:true,st,pts:G.score,record:G.score>was&&was>0,first:!was,line:[[G.right,"right"],[G.wrong,"wrong"],["×"+Math.min(4,1+Math.floor(G.best/5)),"top multiplier"]],hint:st<3?`${[15,25,35][st]} right answers for the next star.`:"Three stars. Beat your score.",miss:G.miss,xp:Math.round(G.score/10),rank};save();if(st)burst();haptic("win");renderGame()}
+  const rank=gAward(Math.round(G.score/10));setTimeout(()=>window.ADS&&ADS.brk("game"),1400);G.done=true;G.sum={blitz:true,st,pts:G.score,record:G.score>was&&was>0,first:!was,line:[[G.right,"right"],[G.wrong,"wrong"],["×"+Math.min(4,1+Math.floor(G.best/5)),"top multiplier"]],hint:st<3?`${[15,25,35][st]} right answers for the next star.`:"Three stars. Beat your score.",miss:G.miss,xp:Math.round(G.score/10),rank};save();if(st)burst();haptic("win");renderGame()}
 /* flashcards */
 function flAnswer(ok){if(!G||!G.flip)return;const c=G.cs[G.q];G.res.push({c,ok});haptic(ok?"ok":"bad");gCount(c);if(!ok)gMiss(c);G.q++;G.flip=false;
   if(G.q>=G.cs.length){const n=G.cs.length,k=G.res.filter(r=>r.ok).length,ms=performance.now()-G.t0;return gFinish({m:k===n,st:k<n?0:ms<=45000?3:ms<=90000?2:1,pts:k*100+Math.max(0,Math.round((120000-ms)/60)),line:[[`${k}/${n}`,"knew it"],[(ms/1000).toFixed(0)+"s","time"]],hint:k<n?"Know all of them to unlock the next set.":ms>45000?`Under ${ms>90000?"90":"45"}s for the next star.`:"Top speed.",miss:G.res.filter(r=>!r.ok).map(r=>r.c)})}
@@ -666,7 +668,7 @@ $("v-read").addEventListener("input",e=>{const t=e.target;if(t.classList.contain
 /* ---------- boot ---------- */
 function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar"){renderGrammar();if(window.CTX)CTX.renderDrills()}if(v==="practice")renderPractice();if(v==="test"){renderSteps();if(window.CTX)CTX.renderTest()}updateBadge()}
 /* bridge for the Certified Translator module (ct.js) */
-window.CERT={icol,hl,get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
+window.CERT={art,icol,hl,get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
 applyTheme();
 show(location.hash.slice(1)||"today");
 maybeOnboard();

@@ -633,6 +633,18 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 .trbetter{background:color-mix(in srgb,var(--green) 9%,var(--card))}
 .trerr{margin:10px 0 0}
 .trself{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.trself .btn{font-size:13.5px;padding:10px 6px;min-height:48px}
+
+/* engraved vignettes (Recraft) */
+img.art{display:block;object-fit:contain;flex:none;pointer-events:none;-webkit-user-drag:none}
+:root.dark img.art{filter:brightness(1.55) contrast(.9) saturate(.9)}
+.soic{width:64px;height:64px;background:none}.soic img.art{width:64px;height:64px}
+.deck span{display:flex;align-items:center;gap:10px}.deck img.dk{width:34px;height:34px}
+.gic img.art{width:36px;height:36px}.gic{background:var(--brand-soft)}
+.gcard .gic{width:56px;height:56px;border-radius:16px;background:none}.gcard .gic img.art{width:56px;height:56px}
+.gic.big{background:none;width:96px;height:96px}.gic.big img.art{width:96px;height:96px}
+.gcard.wide .gic,.gic.ff{background:none}
+.kpi{position:relative}.kpi img.kart{position:absolute;right:10px;top:10px;width:44px;height:44px;opacity:.95}
+h2.arth{display:flex;align-items:center;gap:12px}h2.arth img.hart{width:52px;height:52px}
 </style>
 </head>
 <body>
@@ -675,7 +687,7 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 </section>
 
 <section class="view" id="v-cards">
-  <h2>Vocabulary</h2>
+  <h2 class="arth"><img class="art hart" src="img/art/mywords.webp" alt="">Vocabulary</h2>
   <p class="sub">Type the English. Spaced repetition brings each word back just before you'd forget it.</p>
   <div class="seg" id="cmode"><button data-m="cards" aria-pressed="true">Write it</button><button data-m="quiz" aria-pressed="false">Choice</button><button data-m="game" aria-pressed="false">Games</button></div>
   <div class="chips" id="cats"></div>
@@ -684,7 +696,7 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 </section>
 
 <section class="view" id="v-grammar">
-  <h2>Grammar traps</h2>
+  <h2 class="arth"><img class="art hart" src="img/art/compass.webp" alt="">Grammar traps</h2>
   <p class="sub">Where French speakers lose marks. Drill first, then check the rules.</p>
   <div id="ctdrills"></div>
   <div class="panel" id="drill"></div>
@@ -694,14 +706,14 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 </section>
 
 <section class="view" id="v-read">
-  <div id="readhead"><h2>Read the news</h2>
+  <div id="readhead"><h2 class="arth"><img class="art hart" src="img/art/read.webp" alt="">Read the news</h2>
   <p class="sub">French stories from every area NAATI tests. Translate in your head, then check the English.</p>
   <div class="seg" id="rtab"><button data-r="stories" aria-pressed="true">Stories</button><button data-r="live" aria-pressed="false">Live headlines</button></div></div>
   <div id="readzone"></div>
 </section>
 
 <section class="view" id="v-practice">
-  <h2>Work track</h2>
+  <h2 class="arth"><img class="art hart" src="img/art/write.webp" alt="">Work track</h2>
   <p class="sub">Documents you will translate on the job: certificates, contracts, letters, manuals. For the test itself, use the Test tab.</p>
   <div class="seg" id="pkind"><button data-k="s" aria-pressed="true">Sentences</button><button data-k="q" aria-pressed="false">10 min</button><button data-k="p" aria-pressed="false">1 hour</button><button data-k="r" aria-pressed="false">Revision</button></div>
   <div class="chips" id="ptabs"></div>
@@ -709,7 +721,7 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 </section>
 
 <section class="view" id="v-test">
-  <h2>Test track</h2>
+  <h2 class="arth"><img class="art hart" src="img/art/stamp.webp" alt="">Test track</h2>
   <p class="sub">Certified Translator, French into English: general texts, test conditions.</p>
   <div id="ctzone"></div>
   <h3>About the test</h3>
@@ -757,12 +769,13 @@ textarea.trin{min-height:110px;margin-bottom:12px}
   <div class="panel" style="padding:4px 16px">
     <div class="set"><div><b>Back up progress</b><small>Save a file you can restore later</small></div><button class="btn" id="exportbtn">Back up</button></div>
     <div class="set"><div><b>Restore</b><small>From a backup file</small></div><label class="btn" for="importfile">Restore</label><input type="file" id="importfile" accept="application/json,.json" hidden></div>
+    <div class="set" id="adprivrow" hidden><div><b>Privacy choices</b><small>Ad personalisation and consent</small></div><button class="btn" id="adpriv" type="button">Open</button></div>
     <div class="set"><div><b>Reset progress</b><small>Deletes everything on this phone</small></div><button class="btn" id="resetbtn" style="color:var(--red)">Reset</button></div>
   </div>
   <div class="panel">
     <b>About</b>
     <p class="small" style="margin:6px 0 0">Certifié helps French speakers prepare for the Australian Certified Translator test (French into English). It's an independent study app, not affiliated with or endorsed by NAATI. Practice texts are written for this app in the style of test passages; model answers are one good version, not the only one.</p>
-    <p class="small" style="margin:10px 0 0">Your progress stays on this phone. The app collects no data. <a href="https://adrienbuffin1-sketch.github.io/certifie/#privacy" target="_blank" rel="noopener">Privacy policy</a> · <a href="https://adrienbuffin1-sketch.github.io/certifie/#support" target="_blank" rel="noopener">Support</a></p>
+    <p class="small" style="margin:10px 0 0">Your progress stays on this phone. The free iPhone app shows occasional ads from Google AdMob between activities, never during a timed test. <a href="https://adrienbuffin1-sketch.github.io/certifie/#privacy" target="_blank" rel="noopener">Privacy policy</a> · <a href="https://adrienbuffin1-sketch.github.io/certifie/#support" target="_blank" rel="noopener">Support</a></p>
     <p class="small" style="margin:10px 0 0">Fonts: Newsreader and Instrument Sans (SIL Open Font License). <span id="ver">Version 1.0</span></p>
   </div>
 </div></div>
@@ -800,6 +813,8 @@ textarea.trin{min-height:110px;margin-bottom:12px}
 <script src="app.js"></script>
 <script src="ai.js"></script>
 <script src="tr.js"></script>
+<script src="ads.js"></script>
 <script src="ct.js"></script>
+<script>if(window.ADS&&ADS.native){document.getElementById("adprivrow").hidden=false;document.getElementById("adpriv").onclick=()=>ADS.privacy()}</script>
 </body>
 </html>

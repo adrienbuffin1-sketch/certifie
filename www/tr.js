@@ -27,7 +27,7 @@ const stem=w=>w.replace(/(ies|ied)$/,"y").replace(/(ing|ed|es|s)$/,"");
 function overlap(mine,model){const m=new Set(norm(mine).split(" ").filter(w=>w&&!STOP.has(w)).map(stem));const k=norm(model).split(" ").filter(w=>w&&!STOP.has(w)).map(stem);if(!k.length)return 0;return Math.round(k.filter(w=>m.has(w)).length/k.length*100)}
 function termsIn(it){const out=[];const f=norm(it.fr);(it.terms||[]).forEach(t=>{const w=norm(t[0]);if(w&&f.includes(w))out.push(t)});
   if(it.lv==="short"&&it.word){const c=C.CARDS.find(x=>x[1]===it.word);if(c)out.push([c[1],c[2]])}return out}
-function award(score){const S=C.S,t=st();const d=C.T();const first=t.seen[cur.id]===undefined;t.seen[cur.id]=t.seen[cur.id]===undefined?score:Math.max(score,t.seen[cur.id]);
+function award(score){if(((C.S.tr&&C.S.tr.n)||0)%2===1)setTimeout(()=>window.ADS&&ADS.brk("sentence"),2500);const S=C.S,t=st();const d=C.T();const first=t.seen[cur.id]===undefined;t.seen[cur.id]=t.seen[cur.id]===undefined?score:Math.max(score,t.seen[cur.id]);
   t.n=(t.n||0)+1;t.sum=(t.sum||0)+score;S.counts[d].tr=(S.counts[d].tr||0)+1;if(S.counts[d].tr===5&&!S.done[d].write){S.done[d].write=true;setTimeout(()=>{C.burst();C.toast("5 translations done today")},150)}
   const base=cur.lv==="short"?4:cur.lv==="article"?8:16;const xp=Math.round(base*(score>=6?1:.5)*(first?1:.5));S.xpb=(S.xpb||0)+xp;res.xp=xp;C.save()}
 async function check(){const ta=$("trin");mine=ta?ta.value:"";if(!mine.trim()){ta&&ta.focus();return}if(busy)return;

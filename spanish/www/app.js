@@ -62,6 +62,8 @@ const DI={
 };
 const DALIAS={Immigration:"Migration",Employment:"Work",Banking:"Money & tax",Transport:"Driving",Business:"Business letters"};
 const ICOL={"False friends":"#c8372d","Civil status & ID":"#2a5bd7","Migration":"#0e8a83","Education":"#6d45b8","Work":"#b86a14","Money & tax":"#2e8540","Housing":"#b5502e","Building & trades":"#c08a00","Insurance":"#2b77a8","Legal":"#8a2f52","Police":"#1d3f99","Health":"#cf3d63","Government":"#55667a","Driving":"#d9731a","Connectors":"#178f8f","Admin verbs":"#5a63c9","Contracts":"#8b5a2b","Manuals & products":"#5f8a1f","Business letters":"#9440a8","My words":"#c2185b","Weak words":"#c8372d"};
+const ARTF={"False friends":"g_faux","Civil status & ID":"civil","Migration":"migration","Education":"education","Work":"work","Money & tax":"money","Housing":"housing","Building & trades":"building","Insurance":"insurance","Legal":"legal","Police":"police","Health":"health","Government":"government","Driving":"driving","Connectors":"connectors","Admin verbs":"adminverbs","Contracts":"contracts","Manuals & products":"manuals","Business letters":"letters","My words":"mywords","Weak words":"weak","My errors":"weak"};
+const art=(k,cls="")=>{const f=ARTF[k]||ARTF[DALIAS[k]]||(/^[a-z_]+$/.test(k)?k:"");return f?`<img class="art ${cls}" src="img/art/${f}.webp" alt="" loading="lazy" decoding="async">`:""};
 const icol=k=>ICOL[k]||ICOL[DALIAS[k]]||"#152a63";
 const di=k=>{const p=DI[k]||DI[DALIAS[k]];return p?`<svg class="di" style="--ic:${icol(k)}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`:""};
 const CANSAY="speechSynthesis" in window;
@@ -148,7 +150,7 @@ function renderSotd(){const z=$("sotd");if(!z)return;const x=sotd();const cs=CAR
   const pick=cs.filter(c=>!isNew(c)).sort((a,b)=>(S.box[idOf(a)]||0)-(S.box[idOf(b)]||0)).slice(0,4);const show=(pick.length>=4?pick:pick.concat(cs.filter(isNew).slice(0,4-pick.length)));
   const ff=FFB.faux[hashD(today()+"ff")%Math.max(1,FFB.faux.length)];
   z.innerHTML=`<h3>Subject of the day <small>new subject at midnight</small></h3>
-  <div class="panel sotd" style="--ic:${icol(x.deck)}"><div class="sohead"><span class="soic">${di(x.deck)}</span><div style="min-width:0"><b class="serif">${esc(x.deck)}</b><small>${due} to review · ${nw} new · ${Math.round(kn/cs.length*100)}% known</small></div>${x.done?'<span class="sodone">Done</span>':""}</div>
+  <div class="panel sotd" style="--ic:${icol(x.deck)}"><div class="sohead"><span class="soic">${art(x.deck)||di(x.deck)}</span><div style="min-width:0"><b class="serif">${esc(x.deck)}</b><small>${due} to review · ${nw} new · ${Math.round(kn/cs.length*100)}% known</small></div>${x.done?'<span class="sodone">Done</span>':""}</div>
   <div class="sowords">${show.map(c=>`<div><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join("")}</div>
   <div class="sobar"><i style="width:${Math.min(1,x.n/SOTDN)*100}%"></i></div><div class="small">${x.done?"All done. Keep going for extra practice.":`${Math.min(x.n,SOTDN)}/${SOTDN} words revised in this subject · +100 XP when done`}</div>
   <div class="ans"><button class="btn p" id="sorev" type="button">Revise words</button><button class="btn" id="soplay" type="button">Play a game</button></div></div>
@@ -171,8 +173,8 @@ function renderToday(){autoTicks();const d=T();const done=S.done[d];const c=S.co
   const due=dueCount();const nl=newLeft();
   $("gostudy").innerHTML=due||nl?`<svg viewBox="0 0 24 24"><path d="M7 4.5l11 7.5-11 7.5z"/></svg>${due?`Review ${due} word${due===1?"":"s"}`:`Learn ${nl} new words`}`:`<svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.6 1.7"/></svg>Words done · do a timed passage`;
   const streak=streakOf();
-  $("kpis").innerHTML=`<div class="kpi gold"><b>${streak}</b><span>day streak</span></div><div class="kpi"><b>${known}</b><span>of ${total} words known</span></div><div class="kpi"><b>${s.passages}</b><span>passages done</span></div><div class="kpi"><b>${s.spots}</b><span>revisions done</span></div>`;
-  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${di(k)}${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
+  $("kpis").innerHTML=`<div class="kpi gold">${art("streak","kart")}<b>${streak}</b><span>day streak</span></div><div class="kpi">${art("mywords","kart")}<b>${known}</b><span>of ${total} words known</span></div><div class="kpi">${art("write","kart")}<b>${s.passages}</b><span>passages done</span></div><div class="kpi">${art("stamp","kart")}<b>${s.spots}</b><span>revisions done</span></div>`;
+  $("decks").innerHTML=s.decks.map(k=>{const v=s.st[k];const w=x=>(x/v.n*100).toFixed(1)+"%";return `<div class="deck" data-deck="${esc(k)}" role="button" tabindex="0"><span>${art(k,"dk")||di(k)}${esc(k)}</span><div class="sb"><i class="c-m" style="width:${w(v.m)}"></i><i class="c-k" style="width:${w(v.k)}"></i><i class="c-l" style="width:${w(v.l)}"></i></div><em>${Math.round((v.m+v.k)/v.n*100)}%</em></div>`}).join("");
   const mk=Object.entries(S.marks).filter(([k,v])=>v&&v.date).sort((a,b)=>a[1].date<b[1].date?-1:1);
   if(mk.length){const avg=v=>{const xs=RUB.map(r=>v[r[0]]).filter(Boolean);return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:0};const last=mk.slice(-6);
     const per=RUB.map(r=>{const xs=mk.map(([k,v])=>v[r[0]]).filter(Boolean).slice(-5);return [r[1],xs.length?(xs.reduce((a,b)=>a+b,0)/xs.length):0]});
@@ -277,7 +279,7 @@ const gNext=id=>setsOf(id).findIndex((st,i)=>inInd(st)&&!gMastered(id,i));
 const gNextAfter=(id,i)=>{const s=setsOf(id);for(let j=i+1;j<s.length;j++)if(inInd(s[j]))return j;return -1};
 const setName=s=>esc(s.deck)+(s.part?` ${s.part}/${s.of}`:"");
 const starRow=n=>`<span class="stars" aria-label="${n} of 3 stars">${[1,2,3].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</span>`;
-const gIcon=g=>`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
+const gIcon=g=>art("g_"+g.id)||`<svg viewBox="0 0 24 24" aria-hidden="true">${g.icon}</svg>`;
 let GH=null,G=null,gRAF=0,gT=0;
 function gQuit(){cancelAnimationFrame(gRAF);clearTimeout(gT);G=null}
 function gMiss(c){const d=T();if(!isNew(c)){const id=idOf(c);S.box[id]=0;S.next[id]=today()}}
@@ -666,7 +668,7 @@ $("v-read").addEventListener("input",e=>{const t=e.target;if(t.classList.contain
 /* ---------- boot ---------- */
 function render(v){if(v==="read")renderRead();if(v==="today")renderToday();if(v==="cards")renderCards();if(v==="grammar"){renderGrammar();if(window.CTX)CTX.renderDrills()}if(v==="practice")renderPractice();if(v==="test"){renderSteps();if(window.CTX)CTX.renderTest()}updateBadge()}
 /* bridge for the Certified Translator module (ct.js) */
-window.CERT={icol,hl,get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
+window.CERT={art,icol,hl,get S(){return S},save:()=>save(),esc,$,haptic:k=>haptic(k),toast:m=>toast(m),burst:()=>burst(),T:()=>T(),today,CARDS,EX,idOf,isNew,sayBtn,di,render:v=>render(v),get view(){return curView},show:v=>show(v)};
 applyTheme();
 show(location.hash.slice(1)||"today");
 maybeOnboard();

@@ -55,11 +55,20 @@ workflows:
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Certifié" "$PL" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Certifié" "$PL"
           /usr/libexec/PlistBuddy -c "Add :UIStatusBarHidden bool false" "$PL" || true
           /usr/libexec/PlistBuddy -c "Add :UIViewControllerBasedStatusBarAppearance bool true" "$PL" || true
+          # Google AdMob: app ID, tracking prompt text, Google's SKAdNetwork ID
+          /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string ca-app-pub-3111717712336403~4972475591" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Delete :NSUserTrackingUsageDescription" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Add :NSUserTrackingUsageDescription string This lets us show you ads that are more relevant to you. The app works the same either way." "$PL"
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems array" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0 dict" "$PL" || true
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0:SKAdNetworkIdentifier string cstr6suwn9.skadnetwork" "$PL" || true
           sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' ios/App/App.xcodeproj/project.pbxproj
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/App/App.xcodeproj/project.pbxproj
           if [ -f ios/App/Podfile ]; then
             sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
-            cd ios/App && pod install --repo-update && cd ../..
+            # the AdMob plugin (v6) is written for Google's consent SDK 2.x; 3.x renamed its API
+            perl -0pi -e "s/(target 'App' do\n)/\$1  pod 'GoogleUserMessagingPlatform', '~> 2.7'\n/" ios/App/Podfile
+            cd ios/App && rm -f Podfile.lock && pod install --repo-update && cd ../..
           fi
       - name: Signing
         script: xcode-project use-profiles
